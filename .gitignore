@@ -1,0 +1,11 @@
+.vs*
+Build/
+Library/
+Logs/
+obj/
+UserSettings/
+WebGL/
+Temp/
+LocalPackages/
+*.csproj
+*.sln

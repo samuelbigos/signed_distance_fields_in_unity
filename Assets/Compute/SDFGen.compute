@@ -1,0 +1,32 @@
+#pragma kernel SDFGen
+
+RWTexture3D<float> _sdfTex;
+uint _sdfTexSizeX;
+uint _sdfTexSizeY;
+uint _sdfTexSizeZ;
+float _sdfRadius;
+float _sdfDistMod;
+float _sphereRadius;
+
+float sdSphere(float3 pos, float radius)
+{
+    return length(pos) - radius;
+}
+
+[numthreads(8,8,8)]
+void SDFGen(uint3 id : SV_DispatchThreadID)
+{
+    float3 uv = float3(float(id.x), float(id.y), float(id.z)) + float3(0.5f, 0.5f, 0.5f);
+    uv /= float3(float(_sdfTexSizeX), float(_sdfTexSizeY), float(_sdfTexSizeZ));
+
+    float3 centre;
+    centre.x = 0.5f;
+    centre.y = 0.5f;
+    centre.z = 0.5f;
+    float sphereRadius = _sphereRadius / (_sdfRadius * 2.0f);
+    float dist = sdSphere(uv - centre, sphereRadius);
+
+    dist = clamp(dist / _sdfDistMod, -1.0f, 1.0f);
+    dist = dist * 0.5f + 0.5f;
+    _sdfTex[id.xyz] = dist;
+}

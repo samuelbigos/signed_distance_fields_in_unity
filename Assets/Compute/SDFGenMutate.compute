@@ -1,0 +1,163 @@
+#pragma kernel SDFMutate
+
+Texture3D<float> _sdfTexIn;
+SamplerState sampler_sdfTexIn;
+RWTexture3D<float> _sdfTexOut;
+uint _sdfTexSizeX;
+uint _sdfTexSizeY;
+uint _sdfTexSizeZ;
+float _sdfRadius;
+float _sdfDistMod;
+
+bool _mouseSubtract;
+bool _mouseAdd;
+float4 _mouseOrigin;
+float4 _mouseDir;
+
+float raySphereIntersect(float3 r0, float3 rd, float3 s0, float sr)
+{
+    // - r0: ray origin
+    // - rd: normalized ray direction
+    // - s0: sphere center
+    // - sr: sphere radius
+    // - Returns distance from r0 to first intersecion with sphere,
+    //   or -1.0 if no intersection.
+    float a = dot(rd, rd);
+    float3 s0_r0 = r0 - s0;
+    float b = 2.0 * dot(rd, s0_r0);
+    float c = dot(s0_r0, s0_r0) - (sr * sr);
+    if (b * b - 4.0 * a * c < 0.0)
+    {
+        return -1.0;
+    }
+    return (-b - sqrt((b * b) - 4.0 * a * c)) / (2.0 * a);
+}
+
+float sdf(float3 uv)
+{
+    uv /= (_sdfRadius * 2.0);
+    uv += float3(0.5, 0.5, 0.5);
+    float sdf = _sdfTexIn.SampleLevel(sampler_sdfTexIn, uv, 0);
+    sdf = (sdf * 2.0) - 1.0;
+    sdf *= (_sdfRadius * 2.0);
+    sdf *= _sdfDistMod;
+    return sdf;
+}
+
+bool outOfBounds(float3 pos)
+{
+    if (length(pos) < _sdfRadius)
+    {
+        return false;
+    }
+    return true;
+}
+
+float rayMarch(float3 origin, float3 dir, float k, out float res, out float3 hitPos)
+{
+    res = 1.0;
+    float t = 0.0001;
+    [loop]
+    for (int i = 0; i < 256; i++)
+    {
+        float3 current = origin + dir * t;
+        if (outOfBounds(current))
+        {
+            return 0.0;
+        }
+        float dist = sdf(current);
+        if (dist <= 0.0)
+        {
+            hitPos = current;
+            res = 0.0;
+            return 1.0;
+        }
+        dist = max(dist, 0.0001);
+        res = min(res, k * dist / t);
+        t += dist;
+    }
+    return 0.0;
+}
+
+float sdSphere(float3 pos, float radius)
+{
+    return length(pos) - radius;
+}
+
+float opSubtraction(float d1, float d2)
+{
+    return max(d1, -d2);
+}
+float opSmoothSubtraction(float d1, float d2, float k) 
+{
+    float h = clamp(0.5 - 0.5 * (d2 + d1) / k, 0.0, 1.0);
+    return lerp(d2, -d1, h) + k * h * (1.0 - h);
+}
+
+float opUnion(float d1, float d2)
+{
+    return min(d1, d2);
+}
+float opSmoothUnion(float d1, float d2, float k) 
+{
+    float h = clamp(0.5 + 0.5 * (d2 - d1) / k, 0.0, 1.0);
+    return lerp(d2, d1, h) - k * h * (1.0 - h);
+}
+
+[numthreads(8,8,8)]
+void SDFMutate(uint3 id : SV_DispatchThreadID)
+{
+    float3 uv = float3(float(id.x), float(id.y), float(id.z)) + float3(0.5f, 0.5f, 0.5f);
+    uv /= float3(float(_sdfTexSizeX), float(_sdfTexSizeY), float(_sdfTexSizeZ));
+
+    float3 centre;
+    centre.x = 0.5f;
+    centre.y = 0.5f;
+    centre.z = 0.5f;
+    float3 worldUV = (uv - centre) * (_sdfRadius * 2.0);
+    float dist = sdf(worldUV);
+
+    //sdf = opSmoothSubtraction(sdSphere(worldUV - float3(0.0, 1.0, 0.0), 0.3), sdf, 0.15);
+    //sdf = opSmoothUnion(sdSphere(worldUV - float3(0.0, 0.75, 0.0), 0.5), sdf, 0.05);
+    //sdf = opSmoothUnion(sdSphere(worldUV - float3(0.9, 0.0, 0.0), 0.3), sdf, 0.1);
+    //sdf = opSmoothUnion(sdSphere(worldUV - float3(-0.9, 0.0, 0.0), 0.3), sdf, 0.1);
+    //sdf = opSmoothUnion(sdSphere(worldUV - float3(0.0, 0.0, 0.9), 0.3), sdf, 0.1);
+    //sdf = opSmoothUnion(sdSphere(worldUV - float3(0.0, 0.0, -0.9), 0.3), sdf, 0.1);
+    //sdf = opSmoothSubtraction(sdSphere(worldUV - float3(0.0, -1.0, 0.0), 0.5), sdf, 0.15);
+
+    if (_mouseAdd)
+    {
+        float toSdf = raySphereIntersect(_mouseOrigin.xyz, _mouseDir.xyz, float3(0.0, 0.0, 0.0), 1.0);
+        float3 ro = _mouseOrigin.xyz + _mouseDir.xyz * toSdf;
+        float3 rd = _mouseDir.xyz;
+        float res;
+        float3 hitPos;
+        float hit = rayMarch(ro, _mouseDir.xyz, 1.0, res, hitPos);
+        if (hit > 0.0)
+        {
+            float addRadius = 0.05;
+            float3 pos = ro;
+            dist = opSmoothUnion(sdSphere(worldUV - pos, addRadius), dist, 0.05);
+        }
+    }
+
+    if (_mouseSubtract)
+    {
+        float toSdf = raySphereIntersect(_mouseOrigin.xyz, _mouseDir.xyz, float3(0.0, 0.0, 0.0), 1.0);
+        float3 ro = _mouseOrigin.xyz + _mouseDir.xyz * toSdf;
+        float3 rd = _mouseDir.xyz;
+        float res;
+        float3 hitPos;
+        float hit = rayMarch(ro, _mouseDir.xyz, 1.0, res, hitPos);
+        if (hit > 0.0)
+        {
+            float subtractRadius = 0.05;
+            float3 pos = ro;
+            dist = opSmoothSubtraction(sdSphere(worldUV - pos, subtractRadius), dist, 0.05);
+        }
+    }
+
+    dist /= (_sdfRadius * 2.0f);
+    dist /= _sdfDistMod;
+    _sdfTexOut[id.xyz] = dist * 0.5 + 0.5;
+}
