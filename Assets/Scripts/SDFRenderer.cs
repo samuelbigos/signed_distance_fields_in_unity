@@ -5,22 +5,26 @@ using UnityEngine;
 public class SDFRenderer : MonoBehaviour
 {
     Material _sdfRendererMat;
+    public Texture2D _planetTexture;
 
     private void Awake()
     {
-        _sdfRendererMat = GetComponent<MeshRenderer>().material;
-        _sdfRendererMat.SetVectorArray("_boidPositions", new Vector4[256]);
-        _sdfRendererMat.SetFloatArray("_boidRadii", new float[256]);
     }
 
     void Start()
     {
+        _sdfRendererMat = GetComponent<MeshRenderer>().material;
+        _sdfRendererMat.SetVectorArray("_boidPositions", new Vector4[256]);
+        _sdfRendererMat.SetFloatArray("_boidRadii", new float[256]);
+        _sdfRendererMat.SetTexture("_planetTex", _planetTexture);
+        _sdfRendererMat.SetFloat("_planetTexHeight", (float)_planetTexture.height);
     }
 
-    public void SetSDFParams(float distMod, float sdfRadius)
+    public void SetSDFParams(float distMod, float sdfRadius, float planetRadius)
     {
         _sdfRendererMat.SetFloat("_sdfDistMod", distMod);
         _sdfRendererMat.SetFloat("_sdfRadius", sdfRadius);
+        _sdfRendererMat.SetFloat("_planetRadius", planetRadius);
     }
 
     public void SetSDFTexture(RenderTexture tex)

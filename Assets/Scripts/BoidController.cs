@@ -13,12 +13,12 @@ public class BoidController : MonoBehaviour
     }
 
     public Vector3 PlanetCentre = new Vector3(0.0f, 0.0f, 0.0f);
-    public float PlanetGravity = 1.0f;
     public SDFRenderer SDFRendererInstance;
     public SDFGen SDFGenInstance;
-    public ComputeShader BoidPhysicsCompute;    
+    public ComputeShader BoidPhysicsCompute;
 
     List<Boid> _boids = new List<Boid>();
+    int _playerBoidID;
 
     void Start(){}
 
@@ -42,7 +42,7 @@ public class BoidController : MonoBehaviour
 
         BoidPhysicsCompute.SetVector("_planetCentre", PlanetCentre);
         BoidPhysicsCompute.SetFloat("_timeStep", Time.deltaTime);
-        BoidPhysicsCompute.SetFloat("_gravity", PlanetGravity);
+        BoidPhysicsCompute.SetFloat("_gravity", Globals.PlanetGravity);
 
         BoidPhysicsCompute.SetTexture(kernelID, "_sdfTex", SDFGenInstance.GetSDFTexture());
         BoidPhysicsCompute.SetFloat("_sdfRadius", SDFGenInstance.SDFRadius);
@@ -71,6 +71,17 @@ public class BoidController : MonoBehaviour
         SDFRendererInstance.SetBoids(_boids);
     }
 
+    public void RegisterPlayer(Boid boid)
+    {
+        _boids.Add(boid);
+        _playerBoidID = _boids.Count - 1;
+    }
+
+    public void UpdatePlayer(Boid boid)
+    {
+        _boids[_playerBoidID] = boid;
+    }
+
     public void Spawn(InputAction.CallbackContext context)
     {
         if (context.phase != InputActionPhase.Started)
@@ -79,7 +90,7 @@ public class BoidController : MonoBehaviour
         Boid newBoid = new Boid();
 
         newBoid.position = new Vector4(0.0f, 1.8f, 0.0f);
-        newBoid.velocity = new Vector4(PlanetGravity * 0.2f * Random.Range(-1.0f, 1.0f), 0.0f, PlanetGravity * 0.2f * Random.Range(-1.0f, 1.0f));
+        newBoid.velocity = new Vector4(Globals.PlanetGravity * 0.2f * Random.Range(-1.0f, 1.0f), 0.0f, Globals.PlanetGravity * 0.2f * Random.Range(-1.0f, 1.0f));
         newBoid.radius = 0.066f;
         _boids.Add(newBoid);
     }

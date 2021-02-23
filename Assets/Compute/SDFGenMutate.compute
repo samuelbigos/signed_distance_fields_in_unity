@@ -151,9 +151,13 @@ void SDFMutate(uint3 id : SV_DispatchThreadID)
         float hit = rayMarch(ro, _mouseDir.xyz, 1.0, res, hitPos);
         if (hit > 0.0)
         {
-            float subtractRadius = 0.05;
-            float3 pos = ro;
-            dist = opSmoothSubtraction(sdSphere(worldUV - pos, subtractRadius), dist, 0.05);
+            float subtractRadius = 0.2;
+            for (int i = 0; i < 5; i++)
+            {
+                float3 pos = ro - rd * subtractRadius * 0.1 * float(i);
+                dist = opSmoothSubtraction(sdSphere(worldUV - pos, subtractRadius), dist, 0.05);
+            }
+            
         }
     }
 

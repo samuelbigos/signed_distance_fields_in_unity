@@ -152,7 +152,7 @@ Transform:
   m_Children:
   - {fileID: 871546280}
   m_Father: {fileID: 0}
-  m_RootOrder: 1
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &211207211
 GameObject:
@@ -183,7 +183,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 2
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &211207213
 MonoBehaviour:
@@ -350,6 +350,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c270e396ed90ac74fb69ea1a1996de67, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _planetTexture: {fileID: 2800000, guid: a94fde70b749890478d13f83668a023a, type: 3}
 --- !u!23 &854249155
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -411,7 +412,7 @@ Transform:
   m_LocalScale: {x: 4, y: 4, z: 4}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 0
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &871546279
 GameObject:
@@ -478,7 +479,7 @@ MonoBehaviour:
   SDFResolution: {x: 512, y: 512, z: 512}
   SDFRadius: 2
   SDFDistMod: 1
-  SphereRadius: 1.5
+  SphereRadius: 1
   SDFRendererInstance: {fileID: 854249154}
   MainCamera: {fileID: 1633920889}
 --- !u!4 &1329529345
@@ -493,7 +494,50 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 4
+  m_RootOrder: 5
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1473558808
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1473558810}
+  - component: {fileID: 1473558809}
+  m_Layer: 0
+  m_Name: Game
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1473558809
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1473558808}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ca9ddb64c8724e14fb3ce28f6277e8f6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!4 &1473558810
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1473558808}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 8.042488, y: -8.412394, z: 8.276003}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1633920885
 GameObject:
@@ -522,7 +566,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1633920885}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.76, z: -2.688}
+  m_LocalPosition: {x: 0, y: 0.3, z: -2.688}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 871546280}
@@ -567,8 +611,8 @@ Camera:
   m_GameObject: {fileID: 1633920885}
   m_Enabled: 1
   serializedVersion: 2
-  m_ClearFlags: 1
-  m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
+  m_ClearFlags: 2
+  m_BackGroundColor: {r: 0.1040406, g: 0.11494305, b: 0.13207549, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
@@ -631,7 +675,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   PlanetCentre: {x: 0, y: 0, z: 0}
-  PlanetGravity: 2
   SDFRendererInstance: {fileID: 854249154}
   SDFGenInstance: {fileID: 1329529344}
   BoidPhysicsCompute: {fileID: 7200000, guid: f9c8748993dea5a40851f6a085c49b65, type: 3}
@@ -647,5 +690,5 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 3
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}

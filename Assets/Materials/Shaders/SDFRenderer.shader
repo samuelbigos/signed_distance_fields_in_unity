@@ -35,10 +35,14 @@ Shader "Unlit/SDFRenderer"
             uniform sampler3D _sdfTexture;
             uniform float _sdfDistMod;
             uniform float _sdfRadius;
+            uniform float _planetRadius;
 
             uniform float _boidCount;
             uniform float3 _boidPositions[256];
             uniform float _boidRadii[256];
+
+            uniform float _planetTexHeight;
+            uniform sampler2D _planetTex;
 
             v2f vert(appdata v)
             {
@@ -67,6 +71,12 @@ Shader "Unlit/SDFRenderer"
                 return sdf;
             }
 
+            float3 sdfCol(float3 uv)
+            {
+                float2 colUV = float2(0.5, (length(uv) / _planetRadius));
+                return tex2D(_planetTex, colUV);
+            }
+
             bool outOfBounds(float3 pos)
             {
                 if (length(pos) < _sdfRadius)
@@ -76,9 +86,10 @@ Shader "Unlit/SDFRenderer"
                 return true;
             }
 
-            float worldSample(float3 pos)
+            float worldSample(float3 pos, out float3 col)
             {
                 float dist = sdf(pos);
+                col = sdfCol(pos);
                 for (int i = 0; i < _boidCount; i++)
                 {
                     dist = min(dist, sdSphere(pos, _boidPositions[i], _boidRadii[i]));
@@ -90,13 +101,14 @@ Shader "Unlit/SDFRenderer"
             {
                 float h = 0.001;
                 float2 k = float2(1, -1);
-                return normalize(k.xyy * worldSample(p + k.xyy * h) +
-                    k.yyx * worldSample(p + k.yyx * h) +
-                    k.yxy * worldSample(p + k.yxy * h) +
-                    k.xxx * worldSample(p + k.xxx * h));
+                float3 col;
+                return normalize(k.xyy * worldSample(p + k.xyy * h, col) +
+                    k.yyx * worldSample(p + k.yyx * h, col) +
+                    k.yxy * worldSample(p + k.yxy * h, col) +
+                    k.xxx * worldSample(p + k.xxx * h, col));
             }
 
-            float rayMarch(float3 origin, float3 dir, float k, out float res, out float3 hitPos)
+            float rayMarch(float3 origin, float3 dir, float k, out float res, out float3 hitPos, out float3 colAtHit)
             {
                 res = 1.0;
                 float t = 0.0001;
@@ -108,7 +120,7 @@ Shader "Unlit/SDFRenderer"
                     {
                         return 0.0;
                     }
-                    float dist = worldSample(current);
+                    float dist = worldSample(current, colAtHit);
                     if (dist <= 0.0)
                     {
                         hitPos = current;
@@ -130,7 +142,8 @@ Shader "Unlit/SDFRenderer"
                 // hit
                 float res = 0.0;
                 float3 hitPos = float3(0.0, 0.0, 0.0);
-                float hit = rayMarch(rayOrigin, rayDirection, 16.0, res, hitPos);
+                float3 colAtHit = float3(1.0, 1.0, 1.0);
+                float hit = rayMarch(rayOrigin, rayDirection, 16.0, res, hitPos, colAtHit);
 
                 float s = 0.0;
                 float ao = 0.0;
@@ -141,13 +154,14 @@ Shader "Unlit/SDFRenderer"
                     float3 sunPos = float3(0.0, 10.0, 0.0);
 
                     // shadow                    
-                    float3 sOrigin = hitPos + normal * 0.00025;
+                    float3 sOrigin = hitPos + normal * 0.0005;
                     float3 sDir = normalize(sunPos - sOrigin);
                     float3 h;
-                    ambient = dot(normal, sDir) * 0.5 + 0.5;
-                    rayMarch(sOrigin, sDir, 8.0, res, h);
+                    float3 c;
+                    ambient = dot(normal, sDir) * 0.3 + 0.7;
+                    rayMarch(sOrigin, sDir, 4.0, res, h, c);
                     s = res;
-                    s = ambient * lerp(0.35, 1.0, s);
+                    s = ambient * lerp(0.5, 1.0, s);
 
                     // ao
                     float ao_dist = 0.025;
@@ -158,7 +172,8 @@ Shader "Unlit/SDFRenderer"
                             for (int z = -1; z < 2; z++)
                             {
                                 float3 offset = normalize(float3(x, y, z)) * 0.025f;
-                                ao += clamp(worldSample(hitPos + normal * ao_dist + offset) / ao_dist, 0.0, 1.0);
+                                float3 c;
+                                ao += clamp(worldSample(hitPos + normal * ao_dist + offset, c) / ao_dist, 0.0, 1.0);
                             }
                         }
                     }
@@ -166,7 +181,7 @@ Shader "Unlit/SDFRenderer"
                     ao = 1.0 - pow(1.0 - ao, 3.0);
                 }
                 
-                float3 col = float3(255.0/255.0, 140.0/255.0, 0.0/255.0);
+                float3 col = colAtHit;//float3(255.0/255.0, 140.0/255.0, 0.0/255.0);
                 col *= s;
                 col *= ao;
                 return float4(col, hit);

@@ -66,7 +66,7 @@ public class SDFGen : MonoBehaviour
         SDFGenCompute.SetFloat("_sphereRadius", SphereRadius);
         SDFGenCompute.SetTexture(kernelID, "_sdfTex", _sdfVolumeTexture[0], 0, RenderTextureSubElement.Color);
 
-        SDFRendererInstance.SetSDFParams(SDFDistMod, SDFRadius);
+        SDFRendererInstance.SetSDFParams(SDFDistMod, SDFRadius, SphereRadius);
 
         SDFGenCompute.Dispatch(kernelID, _numKernels.x, _numKernels.y, _numKernels.z);
         SDFRendererInstance.SetSDFTexture(_sdfVolumeTexture[0]);
