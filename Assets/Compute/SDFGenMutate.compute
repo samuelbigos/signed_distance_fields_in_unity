@@ -1,13 +1,8 @@
 #pragma kernel SDFMutate
 
-Texture3D<float> _sdfTexIn;
-SamplerState sampler_sdfTexIn;
+#include "../Includes/SDF.cginc"
+
 RWTexture3D<float> _sdfTexOut;
-uint _sdfTexSizeX;
-uint _sdfTexSizeY;
-uint _sdfTexSizeZ;
-float _sdfRadius;
-float _sdfDistMod;
 
 bool _mouseSubtract;
 bool _mouseAdd;
@@ -16,12 +11,6 @@ float4 _mouseDir;
 
 float raySphereIntersect(float3 r0, float3 rd, float3 s0, float sr)
 {
-    // - r0: ray origin
-    // - rd: normalized ray direction
-    // - s0: sphere center
-    // - sr: sphere radius
-    // - Returns distance from r0 to first intersecion with sphere,
-    //   or -1.0 if no intersection.
     float a = dot(rd, rd);
     float3 s0_r0 = r0 - s0;
     float b = 2.0 * dot(rd, s0_r0);
@@ -30,101 +19,75 @@ float raySphereIntersect(float3 r0, float3 rd, float3 s0, float sr)
     {
         return -1.0;
     }
-    return (-b - sqrt((b * b) - 4.0 * a * c)) / (2.0 * a);
+    return (-b - sqrt(b * b - 4.0 * a * c)) / (2.0 * a);
 }
 
-float sdf(float3 uv)
+float neighborMin(uint3 kernel, uint3 delta)
 {
-    uv /= (_sdfRadius * 2.0);
-    uv += float3(0.5, 0.5, 0.5);
-    float sdf = _sdfTexIn.SampleLevel(sampler_sdfTexIn, uv, 0);
-    sdf = (sdf * 2.0) - 1.0;
-    sdf *= (_sdfRadius * 2.0);
-    sdf *= _sdfDistMod;
-    return sdf;
+    float a = sdfUV(kernelToUV(kernel + delta));
+    float b = sdfUV(kernelToUV(kernel - delta));
+    return min(abs(a), abs(b));
 }
 
-bool outOfBounds(float3 pos)
+float eikonal1d(float h, float v, float g)
 {
-    if (length(pos) < _sdfRadius)
+    return min(h, v) + g;
+}
+
+float eikonal2d(float h, float v, float g)
+{
+    if (abs(h - v) >= g)
+    {
+        return eikonal1d(h, v, g);
+    }
+    float hv = h + v;
+    float d = hv * hv - 2.0 * (h * h + v * v - g * g);
+    return 0.5 * (hv + sqrt(d));
+}
+
+bool eikonal3d(float3 u, out float e, float g)
+{
+    float xyz = u.x + u.y + u.z;
+    float n = 3.0;
+    float d = (xyz * xyz) - n * ((u.x * u.x + u.y * u.y + u.z * u.z) - (g * g));
+    if (d < 0.0)
     {
         return false;
     }
+    e = (1.0 / n) * (xyz + sqrt(d));
     return true;
 }
 
-float rayMarch(float3 origin, float3 dir, float k, out float res, out float3 hitPos)
+float eikonal(float3 u, float g)
 {
-    res = 1.0;
-    float t = 0.0001;
-    [loop]
-    for (int i = 0; i < 256; i++)
+    float e = 0.0;
+    if (eikonal3d(u, e, g))
     {
-        float3 current = origin + dir * t;
-        if (outOfBounds(current))
-        {
-            return 0.0;
-        }
-        float dist = sdf(current);
-        if (dist <= 0.0)
-        {
-            hitPos = current;
-            res = 0.0;
-            return 1.0;
-        }
-        dist = max(dist, 0.0001);
-        res = min(res, k * dist / t);
-        t += dist;
+        return e;
     }
-    return 0.0;
-}
-
-float sdSphere(float3 pos, float radius)
-{
-    return length(pos) - radius;
-}
-
-float opSubtraction(float d1, float d2)
-{
-    return max(d1, -d2);
-}
-float opSmoothSubtraction(float d1, float d2, float k) 
-{
-    float h = clamp(0.5 - 0.5 * (d2 + d1) / k, 0.0, 1.0);
-    return lerp(d2, -d1, h) + k * h * (1.0 - h);
-}
-
-float opUnion(float d1, float d2)
-{
-    return min(d1, d2);
-}
-float opSmoothUnion(float d1, float d2, float k) 
-{
-    float h = clamp(0.5 + 0.5 * (d2 - d1) / k, 0.0, 1.0);
-    return lerp(d2, d1, h) - k * h * (1.0 - h);
+    float e1 = eikonal2d(u.x, u.y, g);
+    float e2 = eikonal2d(u.x, u.z, g);
+    float e3 = eikonal2d(u.y, u.z, g);
+    return min(min(e1, e2), e3);
 }
 
 [numthreads(8,8,8)]
 void SDFMutate(uint3 id : SV_DispatchThreadID)
 {
-    float3 uv = float3(float(id.x), float(id.y), float(id.z)) + float3(0.5f, 0.5f, 0.5f);
-    uv /= float3(float(_sdfTexSizeX), float(_sdfTexSizeY), float(_sdfTexSizeZ));
+    float3 uv = kernelToUV(id);
+    float current = sdfUV(uv);
+    float3 world = uvToWorld(uv);
 
-    float3 centre;
-    centre.x = 0.5f;
-    centre.y = 0.5f;
-    centre.z = 0.5f;
-    float3 worldUV = (uv - centre) * (_sdfRadius * 2.0);
-    float dist = sdf(worldUV);
-
-    //sdf = opSmoothSubtraction(sdSphere(worldUV - float3(0.0, 1.0, 0.0), 0.3), sdf, 0.15);
-    //sdf = opSmoothUnion(sdSphere(worldUV - float3(0.0, 0.75, 0.0), 0.5), sdf, 0.05);
-    //sdf = opSmoothUnion(sdSphere(worldUV - float3(0.9, 0.0, 0.0), 0.3), sdf, 0.1);
-    //sdf = opSmoothUnion(sdSphere(worldUV - float3(-0.9, 0.0, 0.0), 0.3), sdf, 0.1);
-    //sdf = opSmoothUnion(sdSphere(worldUV - float3(0.0, 0.0, 0.9), 0.3), sdf, 0.1);
-    //sdf = opSmoothUnion(sdSphere(worldUV - float3(0.0, 0.0, -0.9), 0.3), sdf, 0.1);
-    //sdf = opSmoothSubtraction(sdSphere(worldUV - float3(0.0, -1.0, 0.0), 0.5), sdf, 0.15);
-
+    // Eikonal
+    float3 u;
+    u.x = neighborMin(id, uint3(1, 0, 0));
+    u.y = neighborMin(id, uint3(0, 1, 0));
+    u.z = neighborMin(id, uint3(0, 0, 1));
+    
+    float g = _sdfRadius * 2.0 / _sdfTexSizeX;
+    float e = eikonal(u, g);
+    if (current > g) current = e;
+    
     if (_mouseAdd)
     {
         float toSdf = raySphereIntersect(_mouseOrigin.xyz, _mouseDir.xyz, float3(0.0, 0.0, 0.0), 1.0);
@@ -137,10 +100,10 @@ void SDFMutate(uint3 id : SV_DispatchThreadID)
         {
             float addRadius = 0.05;
             float3 pos = ro;
-            dist = opSmoothUnion(sdSphere(worldUV - pos, addRadius), dist, 0.05);
+            current = opSmoothUnion(sdSphere(world, pos, addRadius), current, 0.05);
         }
     }
-
+    
     if (_mouseSubtract)
     {
         float toSdf = raySphereIntersect(_mouseOrigin.xyz, _mouseDir.xyz, float3(0.0, 0.0, 0.0), 1.0);
@@ -151,17 +114,15 @@ void SDFMutate(uint3 id : SV_DispatchThreadID)
         float hit = rayMarch(ro, _mouseDir.xyz, 1.0, res, hitPos);
         if (hit > 0.0)
         {
-            float subtractRadius = 0.2;
+            float subtractRadius = 0.06;
             for (int i = 0; i < 5; i++)
             {
                 float3 pos = ro - rd * subtractRadius * 0.1 * float(i);
-                dist = opSmoothSubtraction(sdSphere(worldUV - pos, subtractRadius), dist, 0.05);
+                current = opSmoothSubtraction(sdSphere(world, pos, subtractRadius), current, 0.1);
             }
             
         }
     }
-
-    dist /= (_sdfRadius * 2.0f);
-    dist /= _sdfDistMod;
-    _sdfTexOut[id.xyz] = dist * 0.5 + 0.5;
+    
+    _sdfTexOut[id.xyz] = pack(current);
 }

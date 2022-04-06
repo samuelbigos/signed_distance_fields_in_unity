@@ -1,5 +1,7 @@
 #pragma kernel Step
 
+#include "../Includes/SDF.cginc"
+
 struct Boid
 {
     float3 position;
@@ -11,25 +13,9 @@ float3 _planetCentre;
 float _timeStep;
 float _gravity;
 
-Texture3D<float> _sdfTex;
-SamplerState sampler_sdfTex;
-float _sdfRadius;
-float _sdfDistMod;
-
 int _numBoids;
 RWStructuredBuffer<Boid> _boidBufferIn;
 RWStructuredBuffer<Boid> _boidBufferOut;
-
-float sdf(float3 uv)
-{
-    uv /= (_sdfRadius * 2.0);
-    uv += float3(0.5, 0.5, 0.5);
-    float sdf = _sdfTex.SampleLevel(sampler_sdfTex, uv, 0);
-    sdf = (sdf * 2.0) - 1.0;
-    sdf *= (_sdfRadius * 2.0);
-    sdf *= _sdfDistMod;
-    return sdf;
-}
 
 float3 projectUonV(float3 u, float3 v) 
 {
@@ -38,22 +24,12 @@ float3 projectUonV(float3 u, float3 v)
     return r;
 }
 
-float3 calcNormal(float3 p)
-{
-    float h = 0.001;
-    float2 k = float2(1, -1);
-    return normalize(k.xyy * sdf(p + k.xyy * h) +
-        k.yyx * sdf(p + k.yyx * h) +
-        k.yxy * sdf(p + k.yxy * h) +
-        k.xxx * sdf(p + k.xxx * h));
-}
-
 [numthreads(1,1,1)]
-void Step (uint3 id : SV_DispatchThreadID)
+void Step(uint3 id : SV_DispatchThreadID)
 {
     Boid boid = _boidBufferIn[id.x];
 
-    // collide with other boids
+    // Collide with other boids
     for (uint i = 0; i < (uint)_numBoids; i++)
     {
         if (i == id.x)
@@ -69,7 +45,7 @@ void Step (uint3 id : SV_DispatchThreadID)
         float dist = distance(p0, p1);
         float r = r0 + r1;
         float diff = dist - r;
-        if (diff <= 0.0) // hit
+        if (diff <= 0.0)
         {
             float3 mov = diff * 0.5 * normalize(p1 - p0);
             boid.position += mov;
@@ -82,11 +58,12 @@ void Step (uint3 id : SV_DispatchThreadID)
         }
     }
 
-    float dist = sdf(boid.position.xyz) - boid.radius;
+    float dist = sdfWorld(boid.position.xyz) - boid.radius;
 
-    // collide with planet
+    // Collide with planet
     {
         float3 toSurface = -calcNormal(boid.position);
+        dist *= calcEikonalCorrection(toSurface);
 
         float3 p0 = boid.position;
         float3 p1 = boid.position + toSurface * (dist + boid.radius);
@@ -109,16 +86,9 @@ void Step (uint3 id : SV_DispatchThreadID)
             nv0 -= projectUonV(v0, p0 - p1);
             boid.velocity = nv0 * 1.0;
         }
-
-        /*float3 toSurface = -calcNormal(boid.position);
-        float onPlanet = 1.0 - step(0.0, dist + 0.0001);
-        float speed = length(boid.velocity) * 0.4;
-        float normComponent = dot(boid.velocity, toSurface.xyz);
-        boid.velocity += (normComponent * -toSurface) * onPlanet;
-        boid.velocity += -toSurface * speed * onPlanet;*/
     }
 
-    // gravity
+    // Gravity
     float3 toPlanet = normalize(_planetCentre - boid.position);
     float3 gravity = toPlanet * _gravity;
     boid.velocity += gravity * _timeStep;    

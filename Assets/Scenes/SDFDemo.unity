@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0, g: 0, b: 0, a: 1}
+  m_IndirectSpecularColor: {r: 0.37311956, g: 0.3807402, b: 0.3587274, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -149,10 +149,11 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 871546280}
   m_Father: {fileID: 0}
-  m_RootOrder: 2
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &211207211
 GameObject:
@@ -181,9 +182,10 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 3
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &211207213
 MonoBehaviour:
@@ -226,46 +228,6 @@ MonoBehaviour:
         m_CallState: 2
     m_ActionId: 17e137a0-2636-41ce-a81f-4ada2e65ded6
     m_ActionName: Player/Look[/Mouse/delta]
-  - m_PersistentCalls:
-      m_Calls: []
-    m_ActionId: 5ee879a4-15a9-4a70-b970-5ae2981c7c31
-    m_ActionName: UI/Navigate[/Keyboard/w,/Keyboard/upArrow,/Keyboard/s,/Keyboard/downArrow,/Keyboard/a,/Keyboard/leftArrow,/Keyboard/d,/Keyboard/rightArrow]
-  - m_PersistentCalls:
-      m_Calls: []
-    m_ActionId: 773cccd3-be14-4ee2-905c-a5d087eba0d1
-    m_ActionName: UI/Submit[/Keyboard/enter]
-  - m_PersistentCalls:
-      m_Calls: []
-    m_ActionId: 203bf578-2e6a-4a7a-88ab-4b305a882dba
-    m_ActionName: UI/Cancel[/Keyboard/escape]
-  - m_PersistentCalls:
-      m_Calls: []
-    m_ActionId: 49050b48-9d47-4d18-a81f-4ce7b13fe187
-    m_ActionName: UI/Point[/Mouse/position]
-  - m_PersistentCalls:
-      m_Calls: []
-    m_ActionId: be2aa3b8-60ea-44bd-be7e-2cf2177ce2ac
-    m_ActionName: UI/Click[/Mouse/leftButton]
-  - m_PersistentCalls:
-      m_Calls: []
-    m_ActionId: bb2569d9-28d5-4775-9ae3-1e86567efe90
-    m_ActionName: UI/ScrollWheel[/Mouse/scroll]
-  - m_PersistentCalls:
-      m_Calls: []
-    m_ActionId: c3bbe28b-eef6-41da-805c-76eede210d14
-    m_ActionName: UI/MiddleClick[/Mouse/middleButton]
-  - m_PersistentCalls:
-      m_Calls: []
-    m_ActionId: 9e053d1c-ce12-412f-9858-13ab8ecc33ae
-    m_ActionName: UI/RightClick[/Mouse/rightButton]
-  - m_PersistentCalls:
-      m_Calls: []
-    m_ActionId: 178bb5fa-ccbc-42d1-a8e0-5f7009126759
-    m_ActionName: UI/TrackedDevicePosition
-  - m_PersistentCalls:
-      m_Calls: []
-    m_ActionId: d46038a1-6111-4106-8014-4c141efdd23d
-    m_ActionName: UI/TrackedDeviceOrientation
   - m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 1633920887}
@@ -362,6 +324,7 @@ MeshRenderer:
   m_CastShadows: 0
   m_ReceiveShadows: 0
   m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
@@ -407,12 +370,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 854249153}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 4, y: 4, z: 4}
+  m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 1
+  m_Father: {fileID: 1329529345}
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &871546279
 GameObject:
@@ -440,6 +404,7 @@ Transform:
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1633920886}
   m_Father: {fileID: 59523603}
@@ -455,6 +420,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1329529345}
   - component: {fileID: 1329529344}
+  - component: {fileID: 1329529346}
   m_Layer: 0
   m_Name: SDFGen
   m_TagString: Untagged
@@ -474,14 +440,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9444123116137a54ba882214cb9970cb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  SDFGenCompute: {fileID: 7200000, guid: fbe2a8edcd66e454a80e3e5df72babc8, type: 3}
-  SDFMutateCompute: {fileID: 7200000, guid: dc0ab7d85c565584395f2fc3ba2c816f, type: 3}
-  SDFResolution: {x: 512, y: 512, z: 512}
-  SDFRadius: 2
-  SDFDistMod: 1
-  SphereRadius: 1
-  SDFRendererInstance: {fileID: 854249154}
-  MainCamera: {fileID: 1633920889}
+  _sdfGenCompute: {fileID: 7200000, guid: fbe2a8edcd66e454a80e3e5df72babc8, type: 3}
+  _sdfMutateCompute: {fileID: 7200000, guid: dc0ab7d85c565584395f2fc3ba2c816f, type: 3}
+  _sdfResolution: {x: 384, y: 384, z: 384}
+  _sdfRadius: 2
+  _sphereRadius: 1
+  _sdfMaxDist: 1
+  _sdfRendererInstance: {fileID: 854249154}
+  _mainCamera: {fileID: 1633920889}
 --- !u!4 &1329529345
 Transform:
   m_ObjectHideFlags: 0
@@ -492,53 +458,25 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 854249157}
   m_Father: {fileID: 0}
-  m_RootOrder: 5
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1473558808
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1473558810}
-  - component: {fileID: 1473558809}
-  m_Layer: 0
-  m_Name: Game
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1473558809
+--- !u!114 &1329529346
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1473558808}
+  m_GameObject: {fileID: 1329529343}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ca9ddb64c8724e14fb3ce28f6277e8f6, type: 3}
+  m_Script: {fileID: 11500000, guid: 9290065c2fd73244eb150403048c8adb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!4 &1473558810
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1473558808}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 8.042488, y: -8.412394, z: 8.276003}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  _gravity: 2
 --- !u!1 &1633920885
 GameObject:
   m_ObjectHideFlags: 0
@@ -548,9 +486,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1633920886}
+  - component: {fileID: 1633920887}
   - component: {fileID: 1633920889}
   - component: {fileID: 1633920888}
-  - component: {fileID: 1633920887}
   m_Layer: 0
   m_Name: OrbitCamera
   m_TagString: MainCamera
@@ -568,6 +506,7 @@ Transform:
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0.3, z: -2.688}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 871546280}
   m_RootOrder: 0
@@ -589,9 +528,9 @@ MonoBehaviour:
   ZoomSpeed: 0.01
   ZoomDeceleration: 10
   PanSpeed: 0.1
-  Deceleration: 5
-  MinZoom: 2.5
-  MaxZoom: 10
+  Deceleration: 25
+  MinZoom: 2
+  MaxZoom: 5
   GimbalH: {fileID: 59523602}
   GimbalV: {fileID: 871546279}
 --- !u!81 &1633920888
@@ -625,7 +564,7 @@ Camera:
     y: 0
     width: 1
     height: 1
-  near clip plane: 0.3
+  near clip plane: 0.01
   far clip plane: 1000
   field of view: 60
   orthographic: 0
@@ -674,10 +613,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 70b7786c44ba6924faadaec3c0a376a9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  PlanetCentre: {x: 0, y: 0, z: 0}
-  SDFRendererInstance: {fileID: 854249154}
-  SDFGenInstance: {fileID: 1329529344}
-  BoidPhysicsCompute: {fileID: 7200000, guid: f9c8748993dea5a40851f6a085c49b65, type: 3}
+  _planetCentre: {x: 0, y: 0, z: 0}
+  _sdfRendererInstance: {fileID: 854249154}
+  _sdfGenInstance: {fileID: 1329529344}
+  _boidPhysicsCompute: {fileID: 7200000, guid: f9c8748993dea5a40851f6a085c49b65, type: 3}
 --- !u!4 &1645661787
 Transform:
   m_ObjectHideFlags: 0
@@ -688,7 +627,8 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 7.870601, y: -3.6344104, z: -0.5532966}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 4
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
