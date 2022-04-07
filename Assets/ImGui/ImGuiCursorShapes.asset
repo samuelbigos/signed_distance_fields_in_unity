@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 70792e8e7be06b54e87366f539f7222b, type: 3}
+  m_Name: ImGuiCursorShapes
+  m_EditorClassIdentifier: 
+  Arrow:
+    Texture: {fileID: 0}
+    Hotspot: {x: 0, y: 0}
+  TextInput:
+    Texture: {fileID: 0}
+    Hotspot: {x: 0, y: 0}
+  ResizeAll:
+    Texture: {fileID: 0}
+    Hotspot: {x: 0, y: 0}
+  ResizeNS:
+    Texture: {fileID: 0}
+    Hotspot: {x: 0, y: 0}
+  ResizeEW:
+    Texture: {fileID: 0}
+    Hotspot: {x: 0, y: 0}
+  ResizeNESW:
+    Texture: {fileID: 0}
+    Hotspot: {x: 0, y: 0}
+  ResizeNWSE:
+    Texture: {fileID: 0}
+    Hotspot: {x: 0, y: 0}
+  Hand:
+    Texture: {fileID: 0}
+    Hotspot: {x: 0, y: 0}
+  NotAllowed:
+    Texture: {fileID: 0}
+    Hotspot: {x: 0, y: 0}

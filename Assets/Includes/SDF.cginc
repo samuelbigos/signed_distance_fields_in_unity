@@ -207,21 +207,21 @@ float sdSphere(float3 pos, float3 spherePos, float sphereRadius)
 }
 float opSubtraction(float d1, float d2)
 {
-    return max(d1, -d2);
+    return max(-d1,d2);
 }
 float opSmoothSubtraction(float d1, float d2, float k) 
 {
-    float h = clamp(0.5 - 0.5 * (d2 + d1) / k, 0.0, 1.0);
-    return lerp(d2, -d1, h) + k * h * (1.0 - h);
+    float h = max(k-abs(-d1-d2),0.0);
+    return max(-d1, d2) + h*h*0.25/k;
 }
 float opUnion(float d1, float d2)
 {
-    return min(d1, d2);
+    return min(d1,d2);
 }
 float opSmoothUnion(float d1, float d2, float k) 
 {
-    float h = clamp(0.5 + 0.5 * (d2 - d1) / k, 0.0, 1.0);
-    return lerp(d2, d1, h) - k * h * (1.0 - h);
+    float h = max(k-abs(d1-d2),0.0);
+    return min(d1, d2) - h*h*0.25/k;
 }
 
 #endif // SDF_INCLUDED

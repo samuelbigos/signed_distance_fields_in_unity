@@ -6,9 +6,6 @@ namespace SDF
     {
         private static SDFSurface _instance;
         public static SDFSurface Instance => _instance;
-    
-        [SerializeField] private float _gravity = 1.0f;
-        public float Gravity => _gravity;
 
         private void Awake()
         {

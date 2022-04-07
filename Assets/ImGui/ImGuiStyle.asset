@@ -1,0 +1,108 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 33d496755d9bce04b8e1fd75c1fa4673, type: 3}
+  m_Name: ImGuiStyle
+  m_EditorClassIdentifier: 
+  Alpha: 0
+  WindowPadding: {x: 0, y: 0}
+  WindowRounding: 0
+  WindowBorderSize: 0
+  WindowMinSize: {x: 0, y: 0}
+  WindowTitleAlign: {x: 0, y: 0}
+  WindowMenuButtonPosition: 0
+  ChildRounding: 0
+  ChildBorderSize: 0
+  PopupRounding: 0
+  PopupBorderSize: 0
+  FramePadding: {x: 0, y: 0}
+  FrameRounding: 0
+  FrameBorderSize: 0
+  ItemSpacing: {x: 0, y: 0}
+  ItemInnerSpacing: {x: 0, y: 0}
+  CellPadding: {x: 0, y: 0}
+  TouchExtraPadding: {x: 0, y: 0}
+  IndentSpacing: 0
+  ColumnsMinSpacing: 0
+  ScrollbarSize: 0
+  ScrollbarRounding: 0
+  GrabMinSize: 0
+  GrabRounding: 0
+  LogSliderDeadzone: 0
+  TabRounding: 0
+  TabBorderSize: 0
+  ColorButtonPosition: 0
+  ButtonTextAlign: {x: 0, y: 0}
+  SelectableTextAlign: {x: 0, y: 0}
+  DisplayWindowPadding: {x: 0, y: 0}
+  DisplaySafeAreaPadding: {x: 0, y: 0}
+  MouseCursorScale: 0
+  AntiAliasedLines: 0
+  AntiAliasedLinesUseTex: 0
+  AntiAliasedFill: 0
+  CurveTessellationTol: 0
+  CircleTessellationMaxError: 0
+  Colors:
+  - {r: 0, g: 0, b: 0, a: 0}
+  - {r: 0, g: 0, b: 0, a: 0}
+  - {r: 0, g: 0, b: 0, a: 0}
+  - {r: 0, g: 0, b: 0, a: 0}
+  - {r: 0, g: 0, b: 0, a: 0}
+  - {r: 0, g: 0, b: 0, a: 0}
+  - {r: 0, g: 0, b: 0, a: 0}
+  - {r: 0, g: 0, b: 0, a: 0}
+  - {r: 0, g: 0, b: 0, a: 0}
+  - {r: 0, g: 0, b: 0, a: 0}
+  - {r: 0, g: 0, b: 0, a: 0}
+  - {r: 0, g: 0, b: 0, a: 0}
+  - {r: 0, g: 0, b: 0, a: 0}
+  - {r: 0, g: 0, b: 0, a: 0}
+  - {r: 0, g: 0, b: 0, a: 0}
+  - {r: 0, g: 0, b: 0, a: 0}
+  - {r: 0, g: 0, b: 0, a: 0}
+  - {r: 0, g: 0, b: 0, a: 0}
+  - {r: 0, g: 0, b: 0, a: 0}
+  - {r: 0, g: 0, b: 0, a: 0}
+  - {r: 0, g: 0, b: 0, a: 0}
+  - {r: 0, g: 0, b: 0, a: 0}
+  - {r: 0, g: 0, b: 0, a: 0}
+  - {r: 0, g: 0, b: 0, a: 0}
+  - {r: 0, g: 0, b: 0, a: 0}
+  - {r: 0, g: 0, b: 0, a: 0}
+  - {r: 0, g: 0, b: 0, a: 0}
+  - {r: 0, g: 0, b: 0, a: 0}
+  - {r: 0, g: 0, b: 0, a: 0}
+  - {r: 0, g: 0, b: 0, a: 0}
+  - {r: 0, g: 0, b: 0, a: 0}
+  - {r: 0, g: 0, b: 0, a: 0}
+  - {r: 0, g: 0, b: 0, a: 0}
+  - {r: 0, g: 0, b: 0, a: 0}
+  - {r: 0, g: 0, b: 0, a: 0}
+  - {r: 0, g: 0, b: 0, a: 0}
+  - {r: 0, g: 0, b: 0, a: 0}
+  - {r: 0, g: 0, b: 0, a: 0}
+  - {r: 0, g: 0, b: 0, a: 0}
+  - {r: 0, g: 0, b: 0, a: 0}
+  - {r: 0, g: 0, b: 0, a: 0}
+  - {r: 0, g: 0, b: 0, a: 0}
+  - {r: 0, g: 0, b: 0, a: 0}
+  - {r: 0, g: 0, b: 0, a: 0}
+  - {r: 0, g: 0, b: 0, a: 0}
+  - {r: 0, g: 0, b: 0, a: 0}
+  - {r: 0, g: 0, b: 0, a: 0}
+  - {r: 0, g: 0, b: 0, a: 0}
+  - {r: 0, g: 0, b: 0, a: 0}
+  - {r: 0, g: 0, b: 0, a: 0}
+  - {r: 0, g: 0, b: 0, a: 0}
+  - {r: 0, g: 0, b: 0, a: 0}
+  - {r: 0, g: 0, b: 0, a: 0}
+  - {r: 0, g: 0, b: 0, a: 0}
+  - {r: 0, g: 0, b: 0, a: 0}

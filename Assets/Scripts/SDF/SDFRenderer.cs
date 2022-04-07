@@ -1,6 +1,9 @@
+using System;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 using Boids;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace SDF
 {
@@ -22,6 +25,8 @@ namespace SDF
             _sdfRendererMat.SetFloatArray("_boidRadii", new float[256]);
             _sdfRendererMat.SetTexture("_planetTex", _planetTexture);
             _sdfRendererMat.SetFloat("_planetTexHeight", (float)_planetTexture.height);
+            _sdfRendererMat.SetInt("_aoSamples", 32);
+            _sdfRendererMat.SetFloat("_aoKernelSize", 0.01f);
         }
 
         public void SetSDFTexture(RenderTexture tex)

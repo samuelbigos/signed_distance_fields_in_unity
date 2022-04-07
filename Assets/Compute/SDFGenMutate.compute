@@ -4,10 +4,12 @@
 
 RWTexture3D<float> _sdfTexOut;
 
+float _sphereRadius;
 bool _mouseSubtract;
 bool _mouseAdd;
 float4 _mouseOrigin;
 float4 _mouseDir;
+float _brushSize;
 
 float raySphereIntersect(float3 r0, float3 rd, float3 s0, float sr)
 {
@@ -77,51 +79,32 @@ void SDFMutate(uint3 id : SV_DispatchThreadID)
     float3 uv = kernelToUV(id);
     float current = sdfUV(uv);
     float3 world = uvToWorld(uv);
-
-    // Eikonal
-    float3 u;
-    u.x = neighborMin(id, uint3(1, 0, 0));
-    u.y = neighborMin(id, uint3(0, 1, 0));
-    u.z = neighborMin(id, uint3(0, 0, 1));
-    
-    float g = _sdfRadius * 2.0 / _sdfTexSizeX;
-    float e = eikonal(u, g);
-    if (current > g) current = e;
     
     if (_mouseAdd)
     {
-        float toSdf = raySphereIntersect(_mouseOrigin.xyz, _mouseDir.xyz, float3(0.0, 0.0, 0.0), 1.0);
+        float toSdf = raySphereIntersect(_mouseOrigin.xyz, _mouseDir.xyz, float3(0.0, 0.0, 0.0), _sphereRadius);
         float3 ro = _mouseOrigin.xyz + _mouseDir.xyz * toSdf;
-        float3 rd = _mouseDir.xyz;
-        float res;
-        float3 hitPos;
-        float hit = rayMarch(ro, _mouseDir.xyz, 1.0, res, hitPos);
-        if (hit > 0.0)
-        {
-            float addRadius = 0.05;
-            float3 pos = ro;
-            current = opSmoothUnion(sdSphere(world, pos, addRadius), current, 0.05);
-        }
+        float d = sdSphere(world, ro, _brushSize);
+        current = opSmoothUnion(d, current, 0.05);
     }
-    
     if (_mouseSubtract)
     {
-        float toSdf = raySphereIntersect(_mouseOrigin.xyz, _mouseDir.xyz, float3(0.0, 0.0, 0.0), 1.0);
+        float toSdf = raySphereIntersect(_mouseOrigin.xyz, _mouseDir.xyz, float3(0.0, 0.0, 0.0), _sphereRadius);
         float3 ro = _mouseOrigin.xyz + _mouseDir.xyz * toSdf;
-        float3 rd = _mouseDir.xyz;
-        float res;
-        float3 hitPos;
-        float hit = rayMarch(ro, _mouseDir.xyz, 1.0, res, hitPos);
-        if (hit > 0.0)
-        {
-            float subtractRadius = 0.06;
-            for (int i = 0; i < 5; i++)
-            {
-                float3 pos = ro - rd * subtractRadius * 0.1 * float(i);
-                current = opSmoothSubtraction(sdSphere(world, pos, subtractRadius), current, 0.1);
-            }
-            
-        }
+        float d = sdSphere(world, ro, _brushSize * 1.05f);
+        current = opSmoothSubtraction(d, current, 0.1);
+    }
+    if (!_mouseAdd)
+    {
+        // Eikonal pass
+        float3 u;
+        u.x = neighborMin(id, uint3(1, 0, 0));
+        u.y = neighborMin(id, uint3(0, 1, 0));
+        u.z = neighborMin(id, uint3(0, 0, 1));
+    
+        float g = _sdfRadius * 2.0 / _sdfTexSizeX;
+        float e = eikonal(u, g);
+        if (current > g) current = e;
     }
     
     _sdfTexOut[id.xyz] = pack(current);

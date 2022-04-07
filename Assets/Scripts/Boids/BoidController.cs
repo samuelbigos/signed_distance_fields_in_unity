@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using SDF;
+using UImGui;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Serialization;
@@ -21,6 +22,7 @@ namespace Boids
         [SerializeField] private SDFRenderer _sdfRendererInstance;
         [SerializeField] private SDFGen _sdfGenInstance;
         [SerializeField] private ComputeShader _boidPhysicsCompute;
+        [SerializeField] private DebugWindow _debugWindow;
 
         private readonly List<Boid> _boids = new List<Boid>();
         private int _playerBoidID;
@@ -28,7 +30,7 @@ namespace Boids
         private void Start()
         {
             _boidPhysicsCompute.SetVector("_planetCentre", _planetCentre);
-            _boidPhysicsCompute.SetFloat("_gravity", SDFSurface.Instance.Gravity);
+            _boidPhysicsCompute.SetFloat("_gravity", 1.0f);
             _sdfGenInstance.SetComputeSDFParams(_boidPhysicsCompute);
         }
 
@@ -48,6 +50,7 @@ namespace Boids
             _boidPhysicsCompute.SetBuffer(kernelID, "_boidBufferOut", boidBufferOut);
 
             _boidPhysicsCompute.SetFloat("_timeStep", Time.deltaTime);
+            _boidPhysicsCompute.SetFloat("_gravity", _debugWindow.Gravity);
             _boidPhysicsCompute.SetTexture(kernelID, "_sdfTexIn", _sdfGenInstance.SDFTexture);
 
             _boidPhysicsCompute.Dispatch(kernelID, _boids.Count, 1, 1);
@@ -71,18 +74,36 @@ namespace Boids
                 PhysicsCompute();
             }
             _sdfRendererInstance.SetBoids(_boids);
+
+            if (_debugWindow.Spawn)
+            {
+                _debugWindow.Spawn = false;
+                DoSpawn();
+            }
+
+            if (_debugWindow.Reset)
+            {
+                _debugWindow.Reset = false;
+                _boids.Clear();
+                _sdfGenInstance.Reset();
+            }
         }
 
         public void Spawn(InputAction.CallbackContext context)
         {
             if (context.phase != InputActionPhase.Started)
                 return;
+            
+            DoSpawn();
+        }
 
-            float impulse = 0.1f;
+        public void DoSpawn()
+        {
+            float impulse = 0.25f;
             Boid newBoid = new()
             {
                 Position = new Vector4(0.0f, 1.5f, 0.0f),
-                Velocity = new Vector4(SDFSurface.Instance.Gravity * impulse * Random.Range(-1.0f, 1.0f), 0.0f, SDFSurface.Instance.Gravity * impulse * Random.Range(-1.0f, 1.0f)),
+                Velocity = new Vector4(_debugWindow.Gravity * impulse * Random.Range(-1.0f, 1.0f), 0.0f, _debugWindow.Gravity * impulse * Random.Range(-1.0f, 1.0f)),
                 Radius = 0.066f
             };
 

@@ -1,3 +1,4 @@
+using UImGui;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Rendering;
@@ -14,6 +15,7 @@ namespace SDF
         [SerializeField] private float _sdfMaxDist;
         [SerializeField] private SDFRenderer _sdfRendererInstance;
         [SerializeField] private Camera _mainCamera;
+        [SerializeField] private DebugWindow _debugWindow;
 
         public float SDFRadius => _sdfRadius;
         public RenderTexture SDFTexture => _sdfVolumeTexture[_activeSdfTex];
@@ -24,6 +26,7 @@ namespace SDF
         private uint _kernelSizeX;
         private uint _kernelSizeY;
         private uint _kernelSizeZ;
+        private bool _reset;
         
         private void Start()
         {
@@ -35,28 +38,37 @@ namespace SDF
 
         private void Update()
         {
-            //if (Mouse.current.middleButton.wasReleasedThisFrame)
+            if (_reset)
             {
-                Ray ray = _mainCamera.ScreenPointToRay(Mouse.current.position.ReadValue());
-                _sdfMutateCompute.SetBool("_mouseAdd", Mouse.current.leftButton.isPressed);
-                _sdfMutateCompute.SetBool("_mouseSubtract", Keyboard.current.xKey.isPressed);
-                _sdfMutateCompute.SetVector("_mouseOrigin", ray.origin);
-                _sdfMutateCompute.SetVector("_mouseDir", ray.direction);
-        
-                int inSdfTex = _activeSdfTex;
-                int outSdfTex = (_activeSdfTex + 1) & 2;
-        
-                int kernelID = _sdfMutateCompute.FindKernel("SDFMutate");
-                _sdfMutateCompute.SetTexture(kernelID, "_sdfTexIn", _sdfVolumeTexture[inSdfTex], 0, RenderTextureSubElement.Color);
-                _sdfMutateCompute.SetTexture(kernelID, "_sdfTexOut", _sdfVolumeTexture[outSdfTex], 0, RenderTextureSubElement.Color);
-
-                _sdfMutateCompute.Dispatch(kernelID, _numKernels.x, _numKernels.y, _numKernels.z);
-        
-                _activeSdfTex = outSdfTex;
-                _sdfRendererInstance.SetSDFTexture(SDFTexture);
+                InitGenCompute();
+                _reset = false;
             }
+            
+            Ray ray = _mainCamera.ScreenPointToRay(Mouse.current.position.ReadValue());
+            _sdfMutateCompute.SetBool("_mouseAdd", Mouse.current.leftButton.isPressed && _debugWindow.Mode == 0);
+            _sdfMutateCompute.SetBool("_mouseSubtract", Mouse.current.leftButton.isPressed && _debugWindow.Mode == 1);
+            _sdfMutateCompute.SetVector("_mouseOrigin", ray.origin);
+            _sdfMutateCompute.SetVector("_mouseDir", ray.direction);
+    
+            int inSdfTex = _activeSdfTex;
+            int outSdfTex = (_activeSdfTex + 1) & 2;
+    
+            int kernelID = _sdfMutateCompute.FindKernel("SDFMutate");
+            _sdfMutateCompute.SetTexture(kernelID, "_sdfTexIn", _sdfVolumeTexture[inSdfTex], 0, RenderTextureSubElement.Color);
+            _sdfMutateCompute.SetTexture(kernelID, "_sdfTexOut", _sdfVolumeTexture[outSdfTex], 0, RenderTextureSubElement.Color);
+            _sdfMutateCompute.SetFloat("_brushSize", _debugWindow.Size);
+
+            _sdfMutateCompute.Dispatch(kernelID, _numKernels.x, _numKernels.y, _numKernels.z);
+    
+            _activeSdfTex = outSdfTex;
+            _sdfRendererInstance.SetSDFTexture(SDFTexture);
         }
 
+        public void Reset()
+        {
+            _reset = true;
+        }
+        
         private void InitGenCompute()
         {
             int kernelID = _sdfGenCompute.FindKernel("SDFGen");
@@ -107,7 +119,7 @@ namespace SDF
             shader.SetInt("_sdfTexSizeZ", _sdfResolution.z);
             shader.SetFloat("_sdfRadius", _sdfRadius);
             shader.SetFloat("_sdfMaxDist", _sdfMaxDist);
-            shader.SetFloat("_planetRadius", _sphereRadius);
+            shader.SetFloat("_sphereRadius", _sphereRadius);
         }
         
         public void SetMaterialSDFParams(Material mat)
@@ -117,7 +129,7 @@ namespace SDF
             mat.SetInt("_sdfTexSizeZ", _sdfResolution.z);
             mat.SetFloat("_sdfRadius", _sdfRadius);
             mat.SetFloat("_sdfMaxDist", _sdfMaxDist);
-            mat.SetFloat("_planetRadius", _sphereRadius);
+            mat.SetFloat("_sphereRadius", _sphereRadius);
         }
     }
 }

@@ -29,7 +29,7 @@ Shader "Unlit/SDFRenderer"
                 float3 vectorToSurface : TEXCOORD1;
             };
 
-            uniform float _planetRadius;
+            uniform float _sphereRadius;
 
             uniform float _boidCount;
             uniform float3 _boidPositions[256];
@@ -51,7 +51,7 @@ Shader "Unlit/SDFRenderer"
 
             float3 sdfCol(float3 pos)
             {
-                float2 colUV = float2(0.5, length(pos) / _planetRadius);
+                float2 colUV = float2(0.5, length(pos) / _sphereRadius);
                 return tex2D(_planetTex, colUV);
             }
 
@@ -77,7 +77,7 @@ Shader "Unlit/SDFRenderer"
                 float eikonalFix = calcEikonalCorrection(dir);
 
                 res = 1.0;
-                float t = 0.001;
+                float t = 0.0;
                 [loop]
                 for (int i = 0; i < 256; i++)
                 {
@@ -113,26 +113,35 @@ Shader "Unlit/SDFRenderer"
 
                 float s = 0.0;
                 float ao = 0.0;
+                float ambient = 0.0;
                 if (hit > 0.0)
                 {
                     float3 normal = calcNormal(hitPos);
                     float3 sunPos = float3(0.0, 10.0, 0.0);
 
                     // Shadow                    
-                    float3 sOrigin = hitPos + normal * 0.0005;
-                    float3 sDir = normalize(sunPos - sOrigin);
+                    float3 sOrigin = hitPos + normal * 0.01;
+                    float3 sDir = normalize(sunPos - hitPos);
                     float3 h, c;
-                    float ambient = dot(normal, sDir) * 0.3 + 0.7;
-                    rayMarchWorld(sOrigin, sDir, 8.0, res, h, c);
-                    s = res;
-                    s = ambient * lerp(0.5, 1.0, s);
 
-                    // AO
-                    float aoDist = 0.1;
-                    ao = clamp(worldSample(hitPos + normal * aoDist, c) / aoDist, 0.0, 1.0);
-                    ao = lerp(0.1, 1.0, ao);
-                    ao = 1.0 - pow(1.0 - ao, 5.0);
+                    ambient = dot(normal, sDir) * 0.3 + 0.7;
+                    s = 1.0 - rayMarchWorld(sOrigin, sDir, 8.0, res, h, c);
+                    s = ambient * lerp(0.5, 1.0, res);
                     
+                    // AO
+                    float phi = PI * (3.0 - sqrt(5.0));
+                    [loop]
+                    for (int i = 0; i < _aoSamples; i++)
+                    {
+                        float3 p = float3(0.0, 0.0, 0.0);
+                        p.y = 1.0 - i / float(_aoSamples - 1.0) * 2.0;
+                        float radius = sqrt(1.0 - pow(p.y, 2.0));
+                        float theta = phi * float(i);
+                        p.x = cos(theta) * radius;
+                        p.z = sin(theta) * radius;
+                        ao += saturate(worldSample(hitPos + p * _aoKernelSize, c) / _aoKernelSize);
+                    }
+                    ao /= float(_aoSamples) * 0.25;
                 }
                 
                 float3 col = colAtHit;
