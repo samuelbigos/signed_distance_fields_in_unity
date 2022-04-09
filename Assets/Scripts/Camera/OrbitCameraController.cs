@@ -46,10 +46,6 @@ public class OrbitCameraController : MonoBehaviour
         camTransform.rotation = _transform.rotation;
     }
 
-    public void MouseMove(InputAction.CallbackContext context)
-    {
-    }
-
     public void RightMouse(InputAction.CallbackContext context)
     {
         switch (context.phase)

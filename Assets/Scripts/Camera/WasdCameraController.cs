@@ -16,6 +16,9 @@ public class WasdCameraController : MonoBehaviour
 
     void Start()
     {
+        _transform = transform;
+        _camTransform = Camera.transform;
+        
         Camera.depthTextureMode = DepthTextureMode.Depth;
         _camTransform.position = _transform.position;
         _camTransform.rotation = _transform.rotation;

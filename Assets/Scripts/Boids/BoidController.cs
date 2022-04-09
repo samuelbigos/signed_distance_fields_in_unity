@@ -11,6 +11,7 @@ namespace Boids
         public struct Boid
         {
             public Vector3 Position;
+            public Vector3 Velocity;
             public float Radius;
         }
 
@@ -96,12 +97,14 @@ namespace Boids
 
         public void DoSpawn()
         {
+            float impulse = 0.25f;
             Boid newBoid = new()
             {
                 Position = new Vector4(0.0f, 1.5f, 0.0f),
+                Velocity = new Vector4(DebugWindow.Gravity * impulse * Random.Range(-1.0f, 1.0f), 0.0f, DebugWindow.Gravity * impulse * Random.Range(-1.0f, 1.0f)),
                 Radius = 0.066f
             };
-
+            
             _boids.Add(newBoid);
         }
     }

@@ -53,36 +53,41 @@ namespace SDF
             SetSDFParams(SDFCompute);                       
             SetSDFParams(SDFRendererInstance.SDFRendererMat);
             
+            // Reset the SDF
             if (_reset)
             {
                 InitGenCompute();
                 _reset = false;
                 return;
             }
-            
-            Ray ray = MainCamera.ScreenPointToRay(Mouse.current.position.ReadValue());
-            SDFCompute.SetBool("_mouseAdd", Mouse.current.leftButton.isPressed && DebugWindow.Instance.Mode == 0);
-            SDFCompute.SetBool("_mouseSubtract", Mouse.current.leftButton.isPressed && DebugWindow.Instance.Mode == 1);
-            SDFCompute.SetVector("_mouseOrigin", ray.origin);
-            SDFCompute.SetVector("_mouseDir", ray.direction);
-    
-            int inSdfTex = _activeSdfTex;
-            int outSdfTex = (_activeSdfTex + 1) & 2;
-    
-            int kernelID = SDFCompute.FindKernel("SDFMutate");
-            SDFCompute.SetTexture(kernelID, "_sdfTexIn", _sdfVolumeTexture[inSdfTex], 0, RenderTextureSubElement.Color);
-            SDFCompute.SetTexture(kernelID, "_sdfTexOut", _sdfVolumeTexture[outSdfTex], 0, RenderTextureSubElement.Color);
 
-            SDFCompute.Dispatch(kernelID, _numKernels.x, _numKernels.y, _numKernels.z);
-    
-            _activeSdfTex = outSdfTex;
-            SDFRendererInstance.SetSDFTexture(SDFTexture);
-
-            _eikonelPasses = Mathf.Max(_eikonelPasses - 1, 0);
-            if (Mouse.current.leftButton.isPressed && DebugWindow.Instance.Mode == 1)
+            // Only dispatch if we need to update (making a mod or doing eikonal pass)
+            if (Mouse.current.leftButton.isPressed || _eikonelPasses > 0)
             {
-                // Do enough passes to fill in twice the radius of a cut.
-                _eikonelPasses = (int)(DebugWindow.Instance.BrushSize / (SDFRadius * 2.0 / SDFResolution.x)) * 2;
+                Ray ray = MainCamera.ScreenPointToRay(Mouse.current.position.ReadValue());
+                SDFCompute.SetBool("_mouseAdd", Mouse.current.leftButton.isPressed && DebugWindow.Instance.Mode == 0);
+                SDFCompute.SetBool("_mouseSubtract", Mouse.current.leftButton.isPressed && DebugWindow.Instance.Mode == 1);
+                SDFCompute.SetVector("_mouseOrigin", ray.origin);
+                SDFCompute.SetVector("_mouseDir", ray.direction);
+    
+                int inSdfTex = _activeSdfTex;
+                int outSdfTex = (_activeSdfTex + 1) & 2;
+    
+                int kernelID = SDFCompute.FindKernel("SDFMutate");
+                SDFCompute.SetTexture(kernelID, "_sdfTexIn", _sdfVolumeTexture[inSdfTex], 0, RenderTextureSubElement.Color);
+                SDFCompute.SetTexture(kernelID, "_sdfTexOut", _sdfVolumeTexture[outSdfTex], 0, RenderTextureSubElement.Color);
+
+                SDFCompute.Dispatch(kernelID, _numKernels.x, _numKernels.y, _numKernels.z);
+    
+                _activeSdfTex = outSdfTex;
+                SDFRendererInstance.SetSDFTexture(SDFTexture);
+
+                _eikonelPasses--;
+                if (Mouse.current.leftButton.isPressed && DebugWindow.Instance.Mode == 1)
+                {
+                    // Do enough passes to fill in twice the radius of a cut.
+                    _eikonelPasses = (int)(DebugWindow.Instance.BrushSize / (SDFRadius * 2.0 / SDFResolution.x)) * 2;
+                }
             }
             
             if (DebugWindow.Instance.CameraMode != _lastCamMode)
