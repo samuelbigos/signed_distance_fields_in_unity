@@ -808,7 +808,7 @@ MonoBehaviour:
   CameraMode: 0
   SdfResolution: 32
   FPS: 0
-  AOSamples: 16
+  AOSamples: 8
   AOKernelSize: 0.05
   MaxRaymarchSteps: 128
   SunPos: {x: 0, y: 10, z: 0}
