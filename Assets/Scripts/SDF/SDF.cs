@@ -38,9 +38,9 @@ namespace SDF
 
         private void Update()
         {
-            _sdfResolution.x = DebugWindow.Instance.SDFResolution;
-            _sdfResolution.y = DebugWindow.Instance.SDFResolution;
-            _sdfResolution.z = DebugWindow.Instance.SDFResolution;
+            _sdfResolution.x = DebugWindow.Instance.SdfResolution * 8;
+            _sdfResolution.y = DebugWindow.Instance.SdfResolution * 8;
+            _sdfResolution.z = DebugWindow.Instance.SdfResolution * 8;
             
             SetSDFParams(_sdfCompute);                       
             SetSDFParams(_sdfRendererInstance.SDFRendererMat);
@@ -158,6 +158,9 @@ namespace SDF
             mat.SetFloat("_sdfMaxDist", _sdfMaxDist);
             mat.SetFloat("_sphereRadius", _sphereRadius);
             mat.SetInt("_maxRaymarchSteps", DebugWindow.Instance.MaxRaymarchSteps);
+            mat.SetVector("_sunPos", DebugWindow.Instance.SunPos);
+            mat.SetFloat("_shadowIntensity", DebugWindow.Instance.ShadowIntensity);
+            mat.SetFloat("_shadowSoftness", DebugWindow.Instance.ShadowSoftness);
         }
     }
 }

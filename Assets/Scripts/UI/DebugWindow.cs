@@ -20,41 +20,23 @@ namespace UImGui
         private static DebugWindow _instance;
         public static DebugWindow Instance => _instance;
         
-        private int _mode = 0;
-        private float _brushSize = 0.1f;
-        private float _brushHeight = 0.0f;
-        private bool _reset = false;
-        private bool _spawn = false;
-        private float _gravity = 1.0f;
-        private int _debugDrawMode = 0;
-        private int _cameraMode = 0;
-        private int _sdfResolution = 32;
-        private float _fps;
-        private int _aoSamples = 8;
-        private float _aoKernelSize = 0.075f;
-        private int _maxRaymarchSteps = 128;
+        public int Mode = 0;
+        public float BrushSize = 0.1f;
+        public float BrushHeight = 0.0f;
+        public bool Reset = false;
+        public bool Spawn = false;
+        public float Gravity = 1.0f;
+        public int DebugDrawMode = 0;
+        public int CameraMode = 0;
+        public int SdfResolution = 32;
+        public float FPS;
+        public int AOSamples = 8;
+        public float AOKernelSize = 0.075f;
+        public int MaxRaymarchSteps = 128;
+        public Vector3 SunPos = new Vector3(0.0f, 10.0f, 0.0f);
+        public float ShadowIntensity = 0.5f;
+        public float ShadowSoftness = 0.8f;
         
-        public int Mode => _mode;
-        public float BrushSize => _brushSize;
-        public float BrushHeight => _brushHeight;
-        public bool Reset
-        {
-            get => _reset;
-            set => _reset = value;
-        }
-        public bool Spawn
-        {
-            get => _spawn;
-            set => _spawn = value;
-        }
-        public float Gravity => _gravity;
-        public int DebugDrawMode => _debugDrawMode;
-        public int CameraMode => _cameraMode;
-        public int SDFResolution => _sdfResolution * 8;
-        public int AOSamples => _aoSamples;
-        public float AOKernelSize => _aoKernelSize;
-        public int MaxRaymarchSteps => _maxRaymarchSteps;
-
         private void Awake()
         {
             _instance = this;
@@ -73,51 +55,51 @@ namespace UImGui
         private void Update()
         {
             float fps = 1.0f / Time.deltaTime;
-            _fps = 0.033f * fps + 0.966f * _fps;
+            FPS = 0.033f * fps + 0.966f * FPS;
         }
 
         private void OnLayout(UImGui uImGui)
         {
             if (ImGui.Begin("DEBUG MENU", ImGuiWindowFlags.AlwaysAutoResize))
             {
-                ImGui.Text($"FPS: {_fps:F0}");
+                ImGui.Text($"FPS: {FPS:F0}");
                 
                 ImGui.BeginTabBar("DEBUG MENU#left_tabs_bar");
                 if (ImGui.BeginTabItem("General"))
                 {
                     ImGui.Dummy(Vector2.one * 5.0f);
                 
-                    _spawn = ImGui.Button("Spawn Boid");
+                    Spawn = ImGui.Button("Spawn Boid");
                     ImGui.Dummy(Vector2.one * 5.0f);
                 
-                    ImGui.Text("BRUSH SIZE:");
-                    ImGui.SliderFloat("##1", ref _brushSize, 0.005f, 0.25f);
-                    ImGui.Text("BRUSH HEIGHT:");
-                    ImGui.SliderFloat("##2", ref _brushHeight, -1.0f, 1.0f);
-                    ImGui.Text("GRAVITY:");
-                    ImGui.SliderFloat("##3", ref _gravity, -2.0f, 2.0f);
+                    ImGui.TextColored(Color.gray, "SDF Modify Mode:");
+                    ImGui.RadioButton("Add", ref Mode, 0); ImGui.SameLine();
+                    ImGui.RadioButton("Cut", ref Mode, 1); ImGui.SameLine();
+                    ImGui.RadioButton("None", ref Mode, 2);
+                    ImGui.Dummy(Vector2.one * 5.0f);
+                
+                    ImGui.TextColored(Color.gray, "Camera Mode:");
+                    ImGui.RadioButton("Orbit", ref CameraMode, 0); ImGui.SameLine();
+                    ImGui.RadioButton("WASD", ref CameraMode, 1);
+                    ImGui.Dummy(Vector2.one * 5.0f);
+                
+                    ImGui.TextColored(Color.gray, "Draw Mode:");
+                    ImGui.RadioButton("Standard", ref DebugDrawMode, 0); ImGui.SameLine();
+                    ImGui.RadioButton("Debug", ref DebugDrawMode, 1);
+                    ImGui.Dummy(Vector2.one * 5.0f);
+                    
+                    ImGui.TextColored(Color.gray, "Brush Size:");
+                    ImGui.SliderFloat("##1", ref BrushSize, 0.005f, 0.25f);
+                    ImGui.TextColored(Color.gray, "Brush Height:");
+                    ImGui.SliderFloat("##2", ref BrushHeight, -1.0f, 1.0f);
+                    ImGui.TextColored(Color.gray, "Gravity:");
+                    ImGui.SliderFloat("##3", ref Gravity, -2.0f, 2.0f);
 
                     ImGui.Dummy(Vector2.one * 5.0f);
-
-                    ImGui.Text("SDF MODIFY MODE:");
-                    ImGui.RadioButton("Add", ref _mode, 0); ImGui.SameLine();
-                    ImGui.RadioButton("Cut", ref _mode, 1); ImGui.SameLine();
-                    ImGui.RadioButton("None", ref _mode, 2);
-                    ImGui.Dummy(Vector2.one * 5.0f);
                 
-                    ImGui.Text("CAMERA MODE:");
-                    ImGui.RadioButton("Orbit", ref _cameraMode, 0); ImGui.SameLine();
-                    ImGui.RadioButton("WASD", ref _cameraMode, 1);
-                    ImGui.Dummy(Vector2.one * 5.0f);
-                
-                    ImGui.Text("DRAW MODE:");
-                    ImGui.RadioButton("Standard", ref _debugDrawMode, 0); ImGui.SameLine();
-                    ImGui.RadioButton("Debug", ref _debugDrawMode, 1);
-                    ImGui.Dummy(Vector2.one * 5.0f);
-                
-                    ImGui.Text($"SDF RESOLUTION ({_sdfResolution * 8}^3)");
-                    ImGui.SliderInt("##4", ref _sdfResolution, 2, 64);
-                    _reset = ImGui.Button("RESET");
+                    ImGui.TextColored(Color.gray, $"SDF Resolution ({SdfResolution * 8}^3)");
+                    ImGui.SliderInt("##4", ref SdfResolution, 2, 64);
+                    Reset = ImGui.Button("Reset");
                     ImGui.Dummy(Vector2.one * 5.0f);
                     
                     ImGui.EndTabItem();
@@ -125,14 +107,23 @@ namespace UImGui
 
                 if (ImGui.BeginTabItem("Rendering"))
                 {
-                    ImGui.Text("AO SAMPLES:");
-                    ImGui.SliderInt("##1", ref _aoSamples, 0, 32);
+                    ImGui.TextColored(Color.gray, "AO Samples:");
+                    ImGui.SliderInt("##1", ref AOSamples, 0, 32);
                     
-                    ImGui.Text("AO KERNEL SIZE:");
-                    ImGui.SliderFloat("##2", ref _aoKernelSize, 0.0f, 0.25f);
+                    ImGui.TextColored(Color.gray, "AO Kernel Size:");
+                    ImGui.SliderFloat("##2", ref AOKernelSize, 0.0f, 0.25f);
                     
-                    ImGui.Text("MAX RAYMARCH STEPS:");
-                    ImGui.SliderInt("##3", ref (_maxRaymarchSteps), 8, 512);
+                    ImGui.TextColored(Color.gray, "Shadow Intensity:");
+                    ImGui.SliderFloat("##5", ref ShadowIntensity, 0.0f, 1.0f);
+                    
+                    ImGui.TextColored(Color.gray, "Shadow Softness:");
+                    ImGui.SliderFloat("##6", ref ShadowSoftness, 0.0f, 1.0f);
+
+                    ImGui.TextColored(Color.gray, "Max Raymarch Steps:");
+                    ImGui.SliderInt("##3", ref MaxRaymarchSteps, 8, 512);
+
+                    ImGui.TextColored(Color.gray, "Sun Position:");
+                    ImGui.SliderFloat3("##4", ref SunPos, -10.0f, 10.0f);
                     
                     ImGui.EndTabItem();
                 }

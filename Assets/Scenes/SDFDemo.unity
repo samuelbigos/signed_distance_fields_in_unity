@@ -779,8 +779,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1024104415264063440}
-  - component: {fileID: 5187045404857115921}
   - component: {fileID: 5338779034511030891}
+  - component: {fileID: 5187045404857115921}
   m_Layer: 0
   m_Name: DebugWindow
   m_TagString: Untagged
@@ -800,3 +800,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: acd6ffa0119488748b30e3ec2ed924cb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Mode: 0
+  BrushSize: 0.1
+  BrushHeight: 0
+  Reset: 0
+  Spawn: 0
+  Gravity: 1
+  DebugDrawMode: 0
+  CameraMode: 0
+  SdfResolution: 32
+  FPS: 0
+  AOSamples: 8
+  AOKernelSize: 0.075
+  MaxRaymarchSteps: 128
+  SunPos: {x: 0, y: 10, z: 0}
+  ShadowIntensity: 0.5
+  ShadowSoftness: 0.5

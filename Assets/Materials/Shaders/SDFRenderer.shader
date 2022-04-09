@@ -38,7 +38,10 @@ Shader "Unlit/SDFRenderer"
             uniform float _planetTexHeight;
             uniform sampler2D _planetTex;
             uniform int _debugMode = 0;
-
+            uniform float3 _sunPos;
+            uniform float _shadowIntensity;
+            uniform float _shadowSoftness;
+            
             v2f vert(appdata v)
             {
                 v2f o;
@@ -147,16 +150,15 @@ Shader "Unlit/SDFRenderer"
                 if (hit > 0.0)
                 {
                     float3 normal = worldNormal(hitPos);
-                    float3 sunPos = float3(0.0, 10.0, 0.0);
 
                     // Shadow                    
                     float3 sOrigin = hitPos + normal * 0.001;
-                    float3 sDir = normalize(sunPos - hitPos);
+                    float3 sDir = normalize(_sunPos - hitPos);
                     float3 h, c;
 
                     ambient = dot(normal, sDir) * 0.25 + 1.0;
-                    s = 1.0 - worldRayMarch(sOrigin, sDir, 8.0, res, h, c);
-                    s = ambient * lerp(0.5, 1.0, res * 0.75 + s * 0.25);
+                    worldRayMarch(sOrigin, sDir, lerp(0.0, 32.0, 1.0 - _shadowSoftness), res, h, c);
+                    s = ambient * lerp(1.0 - _shadowIntensity, 1.0, res);
                     
                     // AO
                     float phi = PI * (3.0 - sqrt(5.0));
