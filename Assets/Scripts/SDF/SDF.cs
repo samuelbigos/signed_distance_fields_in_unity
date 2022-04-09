@@ -128,9 +128,6 @@ namespace SDF
             _sdfVolumeTexture[1] = new RenderTexture(renderTexDesc);
             _sdfVolumeTexture[1].Create();
 
-            _sdfVolumeTexture[0].filterMode = FilterMode.Bilinear;
-            _sdfVolumeTexture[1].filterMode = FilterMode.Bilinear;
-
             _sdfCompute.SetTexture(kernelID, "_sdfTexOut", _sdfVolumeTexture[0], 0, RenderTextureSubElement.Color);
 
             _sdfCompute.Dispatch(kernelID, _numKernels.x, _numKernels.y, _numKernels.z);

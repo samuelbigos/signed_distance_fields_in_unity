@@ -7,6 +7,7 @@ Shader "Unlit/SDFRenderer"
     {
         Tags { "Queue" = "Transparent" }
         Blend SrcAlpha OneMinusSrcAlpha
+        //Blend One OneMinusSrcAlpha
 
         Pass
         {
@@ -14,8 +15,8 @@ Shader "Unlit/SDFRenderer"
             #pragma vertex vert
             #pragma fragment frag
 
+            #include "Assets/Includes/SDF.cginc"
             #include "UnityCG.cginc"
-            #include "../../Includes/SDF.cginc"
             
             struct appdata
             {
@@ -29,15 +30,14 @@ Shader "Unlit/SDFRenderer"
                 float3 vectorToSurface : TEXCOORD1;
             };
 
-            uniform float _sphereRadius;
-            int _debugMode = 0;
-            
             uniform float _boidCount;
             uniform float3 _boidPositions[256];
             uniform float _boidRadii[256];
 
+            uniform float _sphereRadius;
             uniform float _planetTexHeight;
             uniform sampler2D _planetTex;
+            uniform int _debugMode = 0;
 
             v2f vert(appdata v)
             {
@@ -50,9 +50,9 @@ Shader "Unlit/SDFRenderer"
                 return o;
             }
 
-            float3 sdfCol(float3 pos)
+            float3 sdfCol(float3 uv)
             {
-                float2 colUV = float2(0.5, length(pos) / _sphereRadius);
+                float2 colUV = float2(0.5, (length(uv) / _sphereRadius));
                 return tex2D(_planetTex, colUV);
             }
 
@@ -71,12 +71,23 @@ Shader "Unlit/SDFRenderer"
                 return dist;
             }
 
-            float rayMarchWorld(float3 origin, float3 dir, float k, out float res, out float3 hitPos, out float3 colAtHit)
+            float3 worldNormal(float3 p)
+            {
+                float h = 0.001;
+                float2 k = float2(1, -1);
+                float3 col;
+                return normalize(k.xyy * worldSample(p + k.xyy * h, col) +
+                    k.yyx * worldSample(p + k.yyx * h, col) +
+                    k.yxy * worldSample(p + k.yxy * h, col) +
+                    k.xxx * worldSample(p + k.xxx * h, col));
+            }
+
+            float worldRayMarch(float3 origin, float3 dir, float k, out float res, out float3 hitPos, out float3 colAtHit)
             {
                 // Running eikonal equation on the SDF causes distance values to elongate along non-cardinal directions,
                 // the more diagonal the more pronounced. Here, adjust the distance value by the amount of cardinality.
                 float eikonalFix = calcEikonalCorrection(dir);
-
+                
                 res = 1.0;
                 float t = 0.0;
                 [loop]
@@ -94,10 +105,9 @@ Shader "Unlit/SDFRenderer"
                         res = 0.0;
                         return 1.0;
                     }
-                    dist = max(dist, 0.0);
+                    dist = max(dist, 0.0001) * eikonalFix;
                     res = min(res, k * dist / t);
-                    
-                    t += dist * eikonalFix;
+                    t += dist;
                 }
                 return 1.0;
             }
@@ -106,7 +116,7 @@ Shader "Unlit/SDFRenderer"
             {
                 float3 rayOrigin = i.worldVertex;
                 float3 rayDirection = normalize(i.worldVertex - _WorldSpaceCameraPos);
-                
+
                 if (_debugMode == 1) // 2d sdf cross section
                 {
                     float3 c;
@@ -120,22 +130,23 @@ Shader "Unlit/SDFRenderer"
 
                     return float4(col, 1.0);
                 }
-
+                
                 // project forward to the start of the SDF
                 float dist = raySphereIntersect(rayOrigin, rayDirection, float3(0.0, 0.0, 0.0), _sdfRadius);
                 rayOrigin += rayDirection * (dist + 0.01);
                 
+                // hit
                 float res = 0.0;
                 float3 hitPos = float3(0.0, 0.0, 0.0);
                 float3 colAtHit = float3(1.0, 1.0, 1.0);
-                float hit = rayMarchWorld(rayOrigin, rayDirection, 16.0, res, hitPos, colAtHit);
+                float hit = worldRayMarch(rayOrigin, rayDirection, 16.0, res, hitPos, colAtHit);
 
                 float s = 0.0;
                 float ao = 0.0;
                 float ambient = 0.0;
-                if (hit > hitThreshold())
+                if (hit > 0.0)
                 {
-                    float3 normal = calcNormal(hitPos);
+                    float3 normal = worldNormal(hitPos);
                     float3 sunPos = float3(0.0, 10.0, 0.0);
 
                     // Shadow                    
@@ -144,7 +155,7 @@ Shader "Unlit/SDFRenderer"
                     float3 h, c;
 
                     ambient = dot(normal, sDir) * 0.25 + 1.0;
-                    s = 1.0 - rayMarchWorld(sOrigin, sDir, 8.0, res, h, c);
+                    s = 1.0 - worldRayMarch(sOrigin, sDir, 8.0, res, h, c);
                     s = ambient * lerp(0.5, 1.0, res * 0.75 + s * 0.25);
                     
                     // AO
@@ -169,7 +180,6 @@ Shader "Unlit/SDFRenderer"
                     
                     return float4(col, hit);
                 }
-                
                 return float4(0.0, 0.0, 0.0, 0.0);
             }
             ENDCG
