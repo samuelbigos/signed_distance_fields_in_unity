@@ -1,5 +1,7 @@
 # Signed Distance Fields in Unity
 
+![Preview Image](promo/banner.png)
+
 This is the result of playing around with using signed distance fields to render, deform, and do collision on geometry.
 
 There are no polygons, no rigid bodies, and no standard physiscs engine running. All processing is done on the GPU.
