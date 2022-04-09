@@ -2,7 +2,6 @@
 #define SDF_INCLUDED
 
 static const float PI = 3.141592653589793238462;
-static const float HIT_EPSILON = 0.001;
 
 Texture3D<float> _sdfTexIn;
 SamplerState sampler_sdfTexIn;
@@ -14,14 +13,14 @@ uniform float _sdfRadius;
 
 uniform int _aoSamples;
 uniform float _aoKernelSize;
-uniform float _aoThreshold;
-uniform float _aoContribution;
 
 uniform int _shadowSamples;
 uniform float _shadowKernelSize;
 uniform float _shadowRayOffset;
 uniform float _shadowK;
 uniform float _shadowContribution;
+
+uniform int _maxRaymarchSteps;
 
 // SDF sampling functions
 float pack(float dist)
@@ -60,10 +59,14 @@ float sdfWorld(float3 pos)
 {
     return sdfUV(worldToUV(pos));
 }
+float hitThreshold()
+{
+    return 0.000001f;
+}
 bool rayHit(float3 pos, out float dist)
 {
     dist = sdfWorld(pos);
-    return dist <= HIT_EPSILON;
+    return dist <= hitThreshold();
 }
 
 // Helpers
@@ -84,6 +87,18 @@ float remap(float from, float to, float value)
 {
     return (value - from) / (to - from);
 }
+float raySphereIntersect(float3 r0, float3 rd, float3 s0, float sr)
+{
+    float a = dot(rd, rd);
+    float3 s0_r0 = r0 - s0;
+    float b = 2.0 * dot(rd, s0_r0);
+    float c = dot(s0_r0, s0_r0) - (sr * sr);
+    if (b * b - 4.0 * a * c < 0.0)
+    {
+        return -1.0;
+    }
+    return (-b - sqrt(b * b - 4.0 * a * c)) / (2.0 * a);
+}
 
 // Eikonal correction
 float calcEikonalCorrection(float3 dir)
@@ -96,79 +111,6 @@ float calcEikonalCorrection(float3 dir)
     return eikonalFix;
 }
 
-// SDF lighting
-float shadowRay(float3 origin, float3 dir, float k)
-{
-    float dist;
-    dir = normalize(dir);
-    float res = 1.0;
-    float t = _shadowRayOffset;
-    float3 ray = origin + dir * t;
-    [loop]
-    for (int i = 0; i < 128; i++)
-    {
-        if (rayHit(ray, dist))
-        {
-            return 0.0;
-        }
-        if (outOfBounds(ray))
-        {
-            break;
-        }
-        float kDist = dist * k;
-        res = min(res, kDist / min(t, 1.0));
-        t += max(0.01, dist);
-        ray = origin + dir * t;
-    }
-    return res;
-}
-float shadowCalc(float3 pos, float3 normal, float3 sunPos)
-{
-    float3 sunDir = normalize(sunPos - pos);
-    float3 rayOrigin = pos + normal * _shadowRayOffset;
-
-    float3 oy = normalize(pos - ddy(pos)) * _shadowKernelSize;
-    float3 ox = normalize(pos - ddx(pos)) * _shadowKernelSize;
-    float s = 0.0;
-
-    for (int x = 0; x < _shadowSamples; x++)
-    {
-        for (int y = 0; y < _shadowSamples; y++)
-        {
-            float fx = float(x) - (float(_shadowSamples - 1) / 2.0);
-            float fy = float(y) - (float(_shadowSamples - 1) / 2.0);
-            float3 origin = rayOrigin + oy * fy + ox * fx;
-            s += shadowRay(origin, sunDir, _shadowK);
-        }
-    }
-    s /= float(_shadowSamples * _shadowSamples);
-    return s * _shadowContribution + (1.0 - _shadowContribution);
-}
-// SDF Ambient Occlusion
-float aoCalc(float3 pos, float3 normal)
-{
-    // fibonacci sphere
-    // https://stackoverflow.com/questions/9600801/evenly-distributing-n-points-on-a-sphere
-    float phi = PI * (3.0 - sqrt(5.0));
-    float sum = 0.0;
-    [loop]
-    for (int i = 0; i < _aoSamples; i++)
-    {
-        float3 p = float3(0.0, 0.0, 0.0);
-        p.y = 1.0 - (i / float(_aoSamples - 1.0)) * 2.0;
-        float radius = sqrt(1.0 - pow(p.y, 2.0));
-        float theta = phi * float(i);
-        p.x = cos(theta) * radius;
-        p.z = sin(theta) * radius;
-
-        sum += saturate(sdfWorld(pos + p * _aoKernelSize) / _aoKernelSize);
-    }
-    sum /= float(_aoSamples);
-    sum = 1.0 - pow(1.0 - sum, 2.0);
-    sum = min(1.0, sum * _aoThreshold);
-    return lerp(1.0, sum, _aoContribution);
-}
-
 // Raymarch
 float rayMarch(float3 origin, float3 dir, float k, out float res, out float3 hitPos)
 {
@@ -177,9 +119,9 @@ float rayMarch(float3 origin, float3 dir, float k, out float res, out float3 hit
     float eikonalFix = calcEikonalCorrection(dir);
     
     res = 1.0;
-    float t = 0.001;
+    float t = 0.0;
     [loop]
-    for (int i = 0; i < 256; i++)
+    for (int i = 0; i < _maxRaymarchSteps; i++)
     {
         float3 current = origin + dir * t;
         if (outOfBounds(current))
@@ -193,14 +135,19 @@ float rayMarch(float3 origin, float3 dir, float k, out float res, out float3 hit
             res = 0.0;
             return 1.0;
         }
-        dist = max(dist, 0.0001);
+        dist = max(dist, 0.0);
         res = min(res, k * dist / t);
         t += dist * eikonalFix;
     }
-    return 0.0;
+    return 1.0;
 }
 
 // SDF operations
+float sdBox(float3 p, float3 b)
+{
+    float3 q = abs(p) - b;
+    return length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0);
+}
 float sdSphere(float3 pos, float3 spherePos, float sphereRadius)
 {
     return length(pos - spherePos) - sphereRadius;

@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class OrbitCamera : MonoBehaviour
+public class OrbitCameraController : MonoBehaviour
 {
+    [SerializeField] private Camera _camera;
+    
     public float MinDistance = 25.0f;
     public float MaxDistance = 200.0f;
     public float ZoomSpeed = 1.0f;
@@ -20,11 +22,6 @@ public class OrbitCamera : MonoBehaviour
     private Vector2 _velocity;
     private float _zoomVelocity;
     private bool _mouseDown;
-
-    void Start()
-    {
-
-    }
 
     void Update()
     {
@@ -42,6 +39,9 @@ public class OrbitCamera : MonoBehaviour
         newPos.z = Mathf.Clamp(newPos.z, -MaxZoom, -MinZoom);
         transform.localPosition = newPos;
         _zoomVelocity = Mathf.Lerp(_zoomVelocity, 0.0f, Time.deltaTime * ZoomDeceleration);
+        
+        _camera.transform.position = transform.position;
+        _camera.transform.rotation = transform.rotation;
     }
 
     public void MouseMove(InputAction.CallbackContext context)

@@ -1,23 +1,24 @@
+using System;
 using UImGui;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Rendering;
+using UnityEngine.Serialization;
 
 namespace SDF
 {
-    public class SDFGen : MonoBehaviour
+    public class SDF : MonoBehaviour
     {
-        [SerializeField] private ComputeShader _sdfGenCompute;
-        [SerializeField] private ComputeShader _sdfMutateCompute;
+        [SerializeField] private ComputeShader _sdfCompute;
         [SerializeField] private Vector3Int _sdfResolution;
         [SerializeField] private float _sdfRadius;
         [SerializeField] private float _sphereRadius;
         [SerializeField] private float _sdfMaxDist;
         [SerializeField] private SDFRenderer _sdfRendererInstance;
         [SerializeField] private Camera _mainCamera;
-        [SerializeField] private DebugWindow _debugWindow;
+        [SerializeField] private GameObject _orbitCam;
+        [SerializeField] private GameObject _wasdCam;
 
-        public float SDFRadius => _sdfRadius;
         public RenderTexture SDFTexture => _sdfVolumeTexture[_activeSdfTex];
 
         private int _activeSdfTex = 0;
@@ -26,42 +27,68 @@ namespace SDF
         private uint _kernelSizeX;
         private uint _kernelSizeY;
         private uint _kernelSizeZ;
-        private bool _reset;
-        
+        private bool _reset = true;
+        private int _eikonelPasses;
+        private int _lastCamMode;
+
         private void Start()
         {
-            SetComputeSDFParams(_sdfMutateCompute);
-            SetComputeSDFParams(_sdfGenCompute);                         
-            SetMaterialSDFParams(_sdfRendererInstance.SDFRendererMat);   
-            InitGenCompute();
+            _lastCamMode = DebugWindow.Instance.CameraMode;
         }
 
         private void Update()
         {
+            _sdfResolution.x = DebugWindow.Instance.SDFResolution;
+            _sdfResolution.y = DebugWindow.Instance.SDFResolution;
+            _sdfResolution.z = DebugWindow.Instance.SDFResolution;
+            
+            SetSDFParams(_sdfCompute);                       
+            SetSDFParams(_sdfRendererInstance.SDFRendererMat);
+            
             if (_reset)
             {
                 InitGenCompute();
                 _reset = false;
+                return;
             }
             
             Ray ray = _mainCamera.ScreenPointToRay(Mouse.current.position.ReadValue());
-            _sdfMutateCompute.SetBool("_mouseAdd", Mouse.current.leftButton.isPressed && _debugWindow.Mode == 0);
-            _sdfMutateCompute.SetBool("_mouseSubtract", Mouse.current.leftButton.isPressed && _debugWindow.Mode == 1);
-            _sdfMutateCompute.SetVector("_mouseOrigin", ray.origin);
-            _sdfMutateCompute.SetVector("_mouseDir", ray.direction);
+            _sdfCompute.SetBool("_mouseAdd", Mouse.current.leftButton.isPressed && DebugWindow.Instance.Mode == 0);
+            _sdfCompute.SetBool("_mouseSubtract", Mouse.current.leftButton.isPressed && DebugWindow.Instance.Mode == 1);
+            _sdfCompute.SetVector("_mouseOrigin", ray.origin);
+            _sdfCompute.SetVector("_mouseDir", ray.direction);
     
             int inSdfTex = _activeSdfTex;
             int outSdfTex = (_activeSdfTex + 1) & 2;
     
-            int kernelID = _sdfMutateCompute.FindKernel("SDFMutate");
-            _sdfMutateCompute.SetTexture(kernelID, "_sdfTexIn", _sdfVolumeTexture[inSdfTex], 0, RenderTextureSubElement.Color);
-            _sdfMutateCompute.SetTexture(kernelID, "_sdfTexOut", _sdfVolumeTexture[outSdfTex], 0, RenderTextureSubElement.Color);
-            _sdfMutateCompute.SetFloat("_brushSize", _debugWindow.Size);
+            int kernelID = _sdfCompute.FindKernel("SDFMutate");
+            _sdfCompute.SetTexture(kernelID, "_sdfTexIn", _sdfVolumeTexture[inSdfTex], 0, RenderTextureSubElement.Color);
+            _sdfCompute.SetTexture(kernelID, "_sdfTexOut", _sdfVolumeTexture[outSdfTex], 0, RenderTextureSubElement.Color);
 
-            _sdfMutateCompute.Dispatch(kernelID, _numKernels.x, _numKernels.y, _numKernels.z);
+            _sdfCompute.Dispatch(kernelID, _numKernels.x, _numKernels.y, _numKernels.z);
     
             _activeSdfTex = outSdfTex;
             _sdfRendererInstance.SetSDFTexture(SDFTexture);
+
+            _eikonelPasses = Mathf.Max(_eikonelPasses - 1, 0);
+            if (Mouse.current.leftButton.isPressed && DebugWindow.Instance.Mode == 1)
+            {
+                // Do enough passes to fill in twice the radius of a cut.
+                _eikonelPasses = (int)(DebugWindow.Instance.BrushSize / (_sdfRadius * 2.0 / _sdfResolution.x)) * 2;
+            }
+            
+            if (DebugWindow.Instance.CameraMode != _lastCamMode)
+            {
+                _lastCamMode = DebugWindow.Instance.CameraMode;
+                _orbitCam.SetActive(_lastCamMode == 0);
+                _wasdCam.SetActive(_lastCamMode == 1);
+
+                if (_lastCamMode == 1)
+                {
+                    _wasdCam.transform.position = _orbitCam.transform.position;
+                    _wasdCam.transform.rotation = _orbitCam.transform.rotation;
+                }
+            }
         }
 
         public void Reset()
@@ -71,8 +98,8 @@ namespace SDF
         
         private void InitGenCompute()
         {
-            int kernelID = _sdfGenCompute.FindKernel("SDFGen");
-            _sdfGenCompute.GetKernelThreadGroupSizes(kernelID, out _kernelSizeX, out _kernelSizeY, out _kernelSizeZ);
+            int kernelID = _sdfCompute.FindKernel("SDFGen");
+            _sdfCompute.GetKernelThreadGroupSizes(kernelID, out _kernelSizeX, out _kernelSizeY, out _kernelSizeZ);
             if (_sdfResolution.x % _kernelSizeX != 0 ||
                 _sdfResolution.y % _kernelSizeY != 0 ||
                 _sdfResolution.z % _kernelSizeZ != 0)
@@ -100,19 +127,18 @@ namespace SDF
             _sdfVolumeTexture[0].Create();
             _sdfVolumeTexture[1] = new RenderTexture(renderTexDesc);
             _sdfVolumeTexture[1].Create();
-            
-             _sdfVolumeTexture[0].filterMode = FilterMode.Bilinear;
-             _sdfVolumeTexture[1].filterMode = FilterMode.Bilinear;
-            
-            _sdfGenCompute.SetFloat("_sphereRadius", _sphereRadius);
-            _sdfGenCompute.SetTexture(kernelID, "_sdfTexOut", _sdfVolumeTexture[0], 0, RenderTextureSubElement.Color);
 
-            _sdfGenCompute.Dispatch(kernelID, _numKernels.x, _numKernels.y, _numKernels.z);
-            
+            _sdfVolumeTexture[0].filterMode = FilterMode.Bilinear;
+            _sdfVolumeTexture[1].filterMode = FilterMode.Bilinear;
+
+            _sdfCompute.SetTexture(kernelID, "_sdfTexOut", _sdfVolumeTexture[0], 0, RenderTextureSubElement.Color);
+
+            _sdfCompute.Dispatch(kernelID, _numKernels.x, _numKernels.y, _numKernels.z);
+
             _sdfRendererInstance.SetSDFTexture(_sdfVolumeTexture[0]);
         }
 
-        public void SetComputeSDFParams(ComputeShader shader)
+        public void SetSDFParams(ComputeShader shader)
         {
             shader.SetInt("_sdfTexSizeX", _sdfResolution.x);
             shader.SetInt("_sdfTexSizeY", _sdfResolution.y);
@@ -120,9 +146,13 @@ namespace SDF
             shader.SetFloat("_sdfRadius", _sdfRadius);
             shader.SetFloat("_sdfMaxDist", _sdfMaxDist);
             shader.SetFloat("_sphereRadius", _sphereRadius);
+            shader.SetFloat("_brushSize", DebugWindow.Instance.BrushSize);
+            shader.SetFloat("_brushHeight", DebugWindow.Instance.BrushHeight);
+            shader.SetBool("_doEikonel", _eikonelPasses > 0);
+            shader.SetInt("_maxRaymarchSteps", DebugWindow.Instance.MaxRaymarchSteps);
         }
         
-        public void SetMaterialSDFParams(Material mat)
+        public void SetSDFParams(Material mat)
         {
             mat.SetInt("_sdfTexSizeX", _sdfResolution.x);
             mat.SetInt("_sdfTexSizeY", _sdfResolution.y);
@@ -130,6 +160,7 @@ namespace SDF
             mat.SetFloat("_sdfRadius", _sdfRadius);
             mat.SetFloat("_sdfMaxDist", _sdfMaxDist);
             mat.SetFloat("_sphereRadius", _sphereRadius);
+            mat.SetInt("_maxRaymarchSteps", DebugWindow.Instance.MaxRaymarchSteps);
         }
     }
 }

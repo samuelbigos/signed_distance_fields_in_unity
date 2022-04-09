@@ -2,21 +2,30 @@ using System;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using Boids;
+using UImGui;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using Random = UnityEngine.Random;
 
 namespace SDF
 {
     public class SDFRenderer : MonoBehaviour
     {
+        [SerializeField] private Texture2D _planetTexture;
+        
         public Material SDFRendererMat => _sdfRendererMat;
         
         private Material _sdfRendererMat;
-        [SerializeField] private Texture2D _planetTexture;
-        
+        private Transform _trans;
+
         private static readonly int _boidCount = Shader.PropertyToID("_boidCount");
         private static readonly int _boidPositions = Shader.PropertyToID("_boidPositions");
         private static readonly int _boidRadii = Shader.PropertyToID("_boidRadii");
+
+        private void Awake()
+        {
+            _trans = transform;
+        }
 
         private void Start()
         {
@@ -25,8 +34,27 @@ namespace SDF
             _sdfRendererMat.SetFloatArray("_boidRadii", new float[256]);
             _sdfRendererMat.SetTexture("_planetTex", _planetTexture);
             _sdfRendererMat.SetFloat("_planetTexHeight", (float)_planetTexture.height);
-            _sdfRendererMat.SetInt("_aoSamples", 32);
-            _sdfRendererMat.SetFloat("_aoKernelSize", 0.01f);
+        }
+
+        private void Update()
+        {
+            Shader.SetGlobalInt("_debugMode", DebugWindow.Instance.DebugDrawMode);
+            if (DebugWindow.Instance.DebugDrawMode == 1)
+            {
+                Vector3 p = _trans.localPosition;
+                p.z = 1.0f;
+                _trans.localPosition = p;
+            }
+            else
+            {
+                Vector3 p = _trans.localPosition;
+                p.z = 0.11f;
+                _trans.localPosition = p;
+            }
+            
+            _sdfRendererMat.SetInt("_aoSamples", DebugWindow.Instance.AOSamples);
+            _sdfRendererMat.SetFloat("_aoKernelSize", DebugWindow.Instance.AOKernelSize);
+            _sdfRendererMat.SetInt("_maxRaymarchSteps", DebugWindow.Instance.MaxRaymarchSteps);
         }
 
         public void SetSDFTexture(RenderTexture tex)

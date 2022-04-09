@@ -20,7 +20,7 @@ namespace Boids
 
         [SerializeField] private Vector3 _planetCentre = new Vector3(0.0f, 0.0f, 0.0f);
         [SerializeField] private SDFRenderer _sdfRendererInstance;
-        [SerializeField] private SDFGen _sdfGenInstance;
+        [FormerlySerializedAs("_sdfGenInstance")] [SerializeField] private SDF.SDF _sdfInstance;
         [SerializeField] private ComputeShader _boidPhysicsCompute;
         [SerializeField] private DebugWindow _debugWindow;
 
@@ -31,7 +31,6 @@ namespace Boids
         {
             _boidPhysicsCompute.SetVector("_planetCentre", _planetCentre);
             _boidPhysicsCompute.SetFloat("_gravity", 1.0f);
-            _sdfGenInstance.SetComputeSDFParams(_boidPhysicsCompute);
         }
 
         private void PhysicsCompute()
@@ -51,7 +50,7 @@ namespace Boids
 
             _boidPhysicsCompute.SetFloat("_timeStep", Time.deltaTime);
             _boidPhysicsCompute.SetFloat("_gravity", _debugWindow.Gravity);
-            _boidPhysicsCompute.SetTexture(kernelID, "_sdfTexIn", _sdfGenInstance.SDFTexture);
+            _boidPhysicsCompute.SetTexture(kernelID, "_sdfTexIn", _sdfInstance.SDFTexture);
 
             _boidPhysicsCompute.Dispatch(kernelID, _boids.Count, 1, 1);
 
@@ -69,6 +68,8 @@ namespace Boids
 
         private void Update()
         {
+            _sdfInstance.SetSDFParams(_boidPhysicsCompute);
+            
             if (_boids.Count > 0)
             {
                 PhysicsCompute();
@@ -85,7 +86,7 @@ namespace Boids
             {
                 _debugWindow.Reset = false;
                 _boids.Clear();
-                _sdfGenInstance.Reset();
+                _sdfInstance.Reset();
             }
         }
 
