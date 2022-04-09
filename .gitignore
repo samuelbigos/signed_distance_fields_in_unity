@@ -7,5 +7,7 @@ UserSettings/
 WebGL/
 Temp/
 LocalPackages/
+.idea/
 *.csproj
 *.sln
+*.DotSettings.user
