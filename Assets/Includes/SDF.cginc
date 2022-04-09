@@ -107,7 +107,7 @@ float calcEikonalCorrection(float3 dir)
     float eikonalFix = min(nDir.x, min(nDir.y, nDir.z));
     float l = 0.70711f;
     eikonalFix = remap(0.70711, 1.0, eikonalFix);
-    eikonalFix = lerp(0.99, 1.0, eikonalFix);
+    eikonalFix = lerp(0.98, 1.0, eikonalFix);
     return eikonalFix;
 }
 
