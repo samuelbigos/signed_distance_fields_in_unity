@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -9,16 +7,18 @@ public class WasdCameraController : MonoBehaviour
     public float LookSpeed = 0.5f;
     public float Deceleration = 5.0f;
 
-    public Camera _Camera;
+    public Camera Camera;
 
     private Vector3 _velocity;
     private bool _mouseDown;
+    private Transform _transform;
+    private Transform _camTransform;
 
     void Start()
     {
-        _Camera.depthTextureMode = DepthTextureMode.Depth;
-        _Camera.transform.position = transform.position;
-        _Camera.transform.rotation = transform.rotation;
+        Camera.depthTextureMode = DepthTextureMode.Depth;
+        _camTransform.position = _transform.position;
+        _camTransform.rotation = _transform.rotation;
     }
 
     void Update()
@@ -27,8 +27,8 @@ public class WasdCameraController : MonoBehaviour
 
         if (_mouseDown)
         {
-            Vector3 foward = _Camera.transform.forward;
-            Vector3 right = _Camera.transform.right;
+            Vector3 foward = _camTransform.forward;
+            Vector3 right = _camTransform.right;
 
             if (Keyboard.current.wKey.isPressed)
                 dir += foward;
@@ -49,23 +49,19 @@ public class WasdCameraController : MonoBehaviour
         _velocity = Vector3.Lerp(_velocity, new Vector3(0.0f, 0.0f, 0.0f), Mathf.Min(Time.deltaTime, 1.0f / 60.0f) * Deceleration);
 
         Vector3 newPos = transform.localPosition;
-        transform.localPosition = newPos + _velocity * Time.deltaTime * 120.0f;
+        _transform.localPosition = newPos + _velocity * Time.deltaTime * 120.0f;
 
         if (_mouseDown)
         {
             Vector2 mouse = Pointer.current.delta.ReadValue();
             transform.Rotate(new Vector3(0.0f, 1.0f, 0.0f), mouse.x * LookSpeed, Space.World);
-            transform.Rotate(transform.right, -mouse.y * LookSpeed, Space.World);
+            transform.Rotate(_transform.right, -mouse.y * LookSpeed, Space.World);
         }
 
-        _Camera.transform.position = transform.position;
-        _Camera.transform.rotation = transform.rotation;
+        _camTransform.position = _transform.position;
+        _camTransform.rotation = _transform.rotation;
     }
-
-    public void MouseMove(InputAction.CallbackContext context)
-    {
-    }
-
+    
     public void RightMouse(InputAction.CallbackContext context)
     {
         switch (context.phase)
@@ -75,8 +71,6 @@ public class WasdCameraController : MonoBehaviour
                 break;
             case InputActionPhase.Canceled:
                 _mouseDown = false;
-                break;
-            default:
                 break;
         }
     }

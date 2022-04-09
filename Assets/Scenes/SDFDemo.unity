@@ -811,8 +811,8 @@ MonoBehaviour:
   SdfResolution: 32
   FPS: 0
   AOSamples: 8
-  AOKernelSize: 0.075
+  AOKernelSize: 0.05
   MaxRaymarchSteps: 128
   SunPos: {x: 0, y: 10, z: 0}
-  ShadowIntensity: 0.5
-  ShadowSoftness: 0.5
+  ShadowIntensity: 0.66
+  ShadowSoftness: 0.9

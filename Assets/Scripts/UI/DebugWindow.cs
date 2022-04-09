@@ -1,17 +1,5 @@
-using System;
 using ImGuiNET;
-#if !UIMGUI_REMOVE_IMNODES
-using imnodesNET;
-#endif
-#if !UIMGUI_REMOVE_IMPLOT
-using ImPlotNET;
-using System.Linq;
-#endif
-#if !UIMGUI_REMOVE_IMGUIZMO
-using ImGuizmoNET;
-#endif
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 namespace UImGui
 {
@@ -20,14 +8,14 @@ namespace UImGui
         private static DebugWindow _instance;
         public static DebugWindow Instance => _instance;
         
-        public int Mode = 0;
+        public int Mode;
         public float BrushSize = 0.1f;
-        public float BrushHeight = 0.0f;
-        public bool Reset = false;
-        public bool Spawn = false;
+        public float BrushHeight;
+        public bool Reset;
+        public bool Spawn;
         public float Gravity = 1.0f;
-        public int DebugDrawMode = 0;
-        public int CameraMode = 0;
+        public int DebugDrawMode;
+        public int CameraMode;
         public int SdfResolution = 32;
         public float FPS;
         public int AOSamples = 8;
